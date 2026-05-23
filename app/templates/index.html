@@ -1,0 +1,1143 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WAREG – Wise Asset for Real Economy &amp; Grocery</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+</head>
+<body>
+<div class="shell">
+
+  <!-- ═══════════════════ SIDEBAR ═══════════════════ -->
+  <nav class="sb">
+    <div class="sb-logo">
+      <h1>WAREG</h1>
+      <p>Wise Asset for Real Economy</p>
+    </div>
+
+    <div class="sb-section">
+      <div class="sb-label">Main Features</div>
+
+      <button class="sb-item active" onclick="nav('dashboard', this)">
+        <svg viewBox="0 0 16 16" fill="none">
+          <rect x="1" y="1" width="6" height="6" rx="1.5" fill="currentColor"/>
+          <rect x="9" y="1" width="6" height="6" rx="1.5" fill="currentColor"/>
+          <rect x="1" y="9" width="6" height="6" rx="1.5" fill="currentColor"/>
+          <rect x="9" y="9" width="6" height="6" rx="1.5" fill="currentColor"/>
+        </svg>
+        Dashboard
+      </button>
+
+      <button class="sb-item" onclick="nav('predictor', this)">
+        <svg viewBox="0 0 16 16" fill="none">
+          <polyline points="1,13 5,7 9,10 15,3" stroke="currentColor" stroke-width="1.8"
+            stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Price Predictor
+      </button>
+
+      <button class="sb-item" onclick="nav('map', this)">
+        <svg viewBox="0 0 16 16" fill="none">
+          <circle cx="8" cy="7" r="2.5" stroke="currentColor" stroke-width="1.5"/>
+          <path d="M8 14S3 10.5 3 7a5 5 0 0 1 10 0c0 3.5-5 7-5 7z"
+            stroke="currentColor" stroke-width="1.5" fill="none"/>
+        </svg>
+        Savings Map
+      </button>
+
+      <button class="sb-item" onclick="nav('pantry', this)">
+        <svg viewBox="0 0 16 16" fill="none">
+          <path d="M3 3h10v2H3zM3 7h10v2H3zM3 11h6v2H3z" fill="currentColor" opacity="0.8"/>
+          <circle cx="12" cy="12" r="2.5" fill="currentColor"/>
+        </svg>
+        Digital Kitchen
+      </button>
+
+      <button class="sb-item" onclick="nav('groupbuy', this)">
+        <svg viewBox="0 0 16 16" fill="none">
+          <circle cx="5.5" cy="6" r="2.5" stroke="currentColor" stroke-width="1.5"/>
+          <circle cx="10.5" cy="6" r="2.5" stroke="currentColor" stroke-width="1.5"/>
+          <path d="M1 14c0-2.5 2-4.5 4.5-4.5S10 11.5 10 14"
+            stroke="currentColor" stroke-width="1.5" fill="none"/>
+          <path d="M10.5 9.5c.3-.1.6-.1 1-.1C14 9.4 16 11.5 16 14"
+            stroke="currentColor" stroke-width="1.5" fill="none"/>
+        </svg>
+        Group Buy
+      </button>
+    </div>
+
+    <div class="sb-section">
+      <div class="sb-label">Analytics</div>
+
+      <button class="sb-item" onclick="nav('history', this)">
+        <svg viewBox="0 0 16 16" fill="none">
+          <circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5"/>
+          <path d="M8 5v3.5l2.5 1.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+        Purchase History
+      </button>
+
+      <button class="sb-item" onclick="nav('trends', this)">
+        <svg viewBox="0 0 16 16" fill="none">
+          <rect x="1" y="9" width="3" height="6" rx="1" fill="currentColor"/>
+          <rect x="6" y="5" width="3" height="10" rx="1" fill="currentColor"/>
+          <rect x="11" y="1" width="3" height="14" rx="1" fill="currentColor"/>
+        </svg>
+        Price Trends
+      </button>
+    </div>
+
+    <div class="sb-section">
+      <div class="sb-label">Settings</div>
+
+      <button class="sb-item" onclick="nav('account', this)">
+        <svg viewBox="0 0 16 16" fill="none">
+          <circle cx="8" cy="5.5" r="2.5" stroke="currentColor" stroke-width="1.5"/>
+          <path d="M2 14c0-3.3 2.7-6 6-6s6 2.7 6 6"
+            stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+        </svg>
+        Account
+      </button>
+    </div>
+
+    <div class="sb-bottom">
+      <div class="sb-user">
+        <div class="sb-av" id="sidebar-user-initials">IB</div>
+        <div>
+          <div class="sb-uname" id="sidebar-user-name">Ibu Budi</div>
+          <div class="sb-uloc" id="sidebar-user-location">Jakarta Selatan</div>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ═══════════════════ MAIN ═══════════════════ -->
+  <div class="main">
+
+    <!-- TOPBAR -->
+    <div class="topbar">
+      <div class="search">
+        <svg viewBox="0 0 14 14" fill="none">
+          <circle cx="6" cy="6" r="4" stroke="currentColor" stroke-width="1.4"/>
+          <path d="M10 10l3 3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+        </svg>
+        Cari produk, pasar, atau resep...
+      </div>
+
+      <div class="tb-right">
+        <button class="notif-btn" title="Notifikasi">
+          <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
+            <path d="M7.5 2a4.5 4.5 0 0 0-4.5 4.5V9L2 11.5h11L11.5 9V6.5A4.5 4.5 0 0 0 7.5 2z"
+              stroke="currentColor" stroke-width="1.3"/>
+            <path d="M6 12a1.5 1.5 0 0 0 3 0" stroke="currentColor" stroke-width="1.3"/>
+          </svg>
+          <div class="notif-dot"></div>
+        </button>
+
+        <button class="btn-add add-kitchen-btn">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+            <path d="M6 1v10M1 6h10" stroke="white" stroke-width="1.8" stroke-linecap="round"/>
+          </svg>
+          Add to Kitchen
+        </button>
+
+        <button class="btn btn-out" onclick="logout()" style="margin-left:10px;">Logout</button>
+      </div>
+    </div>
+
+    <!-- ═══════════════════ PAGES ═══════════════════ -->
+    <div class="content">
+
+      <!-- ──────────────── DASHBOARD ──────────────── -->
+      <div class="page active" id="page-dashboard">
+        <div class="pg-head">
+          <div class="pg-title">Dashboard</div>
+          <div class="pg-sub">Selamat datang kembali, <span id="greeting-user-name">Ibu Budi</span></div>
+        </div>
+
+        <div class="toast green">
+          <svg viewBox="0 0 15 15" fill="none">
+            <circle cx="7.5" cy="7.5" r="6" stroke="currentColor" stroke-width="1.4"/>
+            <path d="M5 7.5l2 2 3-3" stroke="currentColor" stroke-width="1.4"
+              stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <div>
+            <div class="toast-title">Kabar baik! 🌶️ Harga cabai diprediksi turun 21% dalam 2 hari.</div>
+            Pertimbangkan untuk menunda pembelian.
+          </div>
+        </div>
+
+        <div class="toast amber">
+          <svg viewBox="0 0 15 15" fill="none">
+            <path d="M7.5 2L1 13h13L7.5 2z" stroke="currentColor" stroke-width="1.3"/>
+            <path d="M7.5 6v4M7.5 11.5v.5" stroke="currentColor" stroke-width="1.4"
+              stroke-linecap="round"/>
+          </svg>
+          <div>
+            <div class="toast-title">🧈 Mentega kadaluarsa hari ini!</div>
+            Gunakan segera agar tidak terbuang.
+          </div>
+        </div>
+
+        <!-- Stats — dash-harga-beras & dash-total-pantry diisi oleh loadDashboardStats() -->
+        <div class="stats">
+          <div class="stat">
+            <div class="stat-top">
+              <div>
+                <div class="stat-label">Harga Beras Terkini</div>
+                <!-- ✦ DINAMIS: diisi oleh loadDashboardStats() via API /api/commodity -->
+                <div class="stat-val" id="dash-harga-beras">
+                  <span style="color:var(--text3);font-size:13px">Memuat...</span>
+                </div>
+                <div class="stat-change neu">harga pasar hari ini</div>
+              </div>
+              <div class="stat-icon" style="background:var(--g4)">
+                <svg viewBox="0 0 16 16" fill="none" style="color:var(--g2)">
+                  <path d="M8 2l1.5 4H14l-3.5 2.5 1.3 4L8 10.5l-3.8 2 1.3-4L2 6h4.5L8 2z"
+                    fill="currentColor"/>
+                </svg>
+              </div>
+            </div>
+          </div>
+          <div class="stat">
+            <div class="stat-top">
+              <div>
+                <div class="stat-label">Total Komoditas</div>
+                <!-- ✦ DINAMIS: diisi oleh loadDashboardStats() via API /api/commodity -->
+                <div class="stat-val" id="dash-total-pantry">
+                  <span style="color:var(--text3);font-size:13px">Memuat...</span>
+                </div>
+                <div class="stat-change neu">data tercatat</div>
+              </div>
+              <div class="stat-icon" style="background:var(--blu-p)">
+                <svg viewBox="0 0 16 16" fill="none" style="color:var(--blu)">
+                  <circle cx="8" cy="8" r="5.5" stroke="currentColor" stroke-width="1.4"/>
+                  <path d="M5.5 8l2 2 3-3" stroke="currentColor" stroke-width="1.5"
+                    stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </div>
+            </div>
+          </div>
+          <div class="stat">
+            <div class="stat-top">
+              <div>
+                <div class="stat-label">Perlu Perhatian</div>
+                <div class="stat-val">3</div>
+                <div class="stat-change dn">2 segera kadaluarsa</div>
+              </div>
+              <div class="stat-icon" style="background:var(--amb-p)">
+                <svg viewBox="0 0 16 16" fill="none" style="color:var(--amb)">
+                  <path d="M8 2l6 11H2L8 2z" stroke="currentColor" stroke-width="1.3"/>
+                  <path d="M8 7v3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                  <circle cx="8" cy="11.5" r="0.7" fill="currentColor"/>
+                </svg>
+              </div>
+            </div>
+          </div>
+          <div class="stat">
+            <div class="stat-top">
+              <div>
+                <div class="stat-label">Grup Beli Bareng</div>
+                <div class="stat-val">3</div>
+                <div class="stat-change up">1 siap checkout</div>
+              </div>
+              <div class="stat-icon" style="background:var(--g4)">
+                <svg viewBox="0 0 16 16" fill="none" style="color:var(--g2)">
+                  <circle cx="5" cy="6" r="2" stroke="currentColor" stroke-width="1.3"/>
+                  <circle cx="11" cy="6" r="2" stroke="currentColor" stroke-width="1.3"/>
+                  <path d="M1 14c0-2.2 1.8-4 4-4s4 1.8 4 4" stroke="currentColor" stroke-width="1.3" fill="none"/>
+                  <path d="M10 10c.3-.1.6-.1 1-.1 2.2 0 4 1.8 4 4" stroke="currentColor" stroke-width="1.3" fill="none"/>
+                </svg>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Main 2-col grid -->
+        <div class="grid2">
+          <!-- Left column -->
+          <div class="col">
+            <!-- AI Price Predictor card -->
+            <div class="card">
+              <div class="card-head">
+                <span class="card-title">
+                  <svg viewBox="0 0 14 14" fill="none">
+                    <polyline points="1,11 4.5,5.5 8,8 13,2" stroke="currentColor"
+                      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                  AI Price Predictor
+                </span>
+                <span class="tag tag-green">AI Aktif</span>
+              </div>
+              <div class="card-body">
+                <div class="pred-item">
+                  <div class="pred-icon">🌶️</div>
+                  <div class="pred-info">
+                    <div class="pred-name">Cabai Merah</div>
+                    <div class="pred-now">Rp 85.000 → Rp 67.000</div>
+                    <div class="mini-chart">
+                      <div class="bar" style="height:85%;background:#9CA3AF"></div>
+                      <div class="bar" style="height:72%;background:#9CA3AF"></div>
+                      <div class="bar" style="height:100%;background:var(--g3)"></div>
+                      <div class="bar" style="height:78%;background:#D1D5DB"></div>
+                      <div class="bar" style="height:82%;background:#D1D5DB"></div>
+                    </div>
+                  </div>
+                  <div class="pred-right">
+                    <div class="pred-pct" style="color:var(--g2)">-21%</div>
+                    <div class="pred-days">dalam 2 hari</div>
+                    <div class="pred-pill pill-wait">⏳ Delay Purchase</div>
+                  </div>
+                </div>
+                <div class="pred-item">
+                  <div class="pred-icon">🧄</div>
+                  <div class="pred-info">
+                    <div class="pred-name">Bawang Putih</div>
+                    <div class="pred-now">Rp 42.000 → Rp 39.000</div>
+                    <div class="mini-chart">
+                      <div class="bar" style="height:100%;background:#9CA3AF"></div>
+                      <div class="bar" style="height:90%;background:var(--g3)"></div>
+                      <div class="bar" style="height:93%;background:#D1D5DB"></div>
+                      <div class="bar" style="height:95%;background:#D1D5DB"></div>
+                      <div class="bar" style="height:92%;background:#D1D5DB"></div>
+                    </div>
+                  </div>
+                  <div class="pred-right">
+                    <div class="pred-pct" style="color:var(--g2)">-7%</div>
+                    <div class="pred-days">dalam 1 hari</div>
+                    <div class="pred-pill pill-watch">👁 Keep Watching</div>
+                  </div>
+                </div>
+                <div class="pred-item" style="margin-bottom:0">
+                  <div class="pred-icon">🍅</div>
+                  <div class="pred-info">
+                    <div class="pred-name">Tomat</div>
+                    <div class="pred-now">Rp 12.000 → Rp 16.000</div>
+                    <div class="mini-chart">
+                      <div class="bar" style="height:60%;background:#9CA3AF"></div>
+                      <div class="bar" style="height:65%;background:#9CA3AF"></div>
+                      <div class="bar" style="height:75%;background:#D1D5DB"></div>
+                      <div class="bar" style="height:90%;background:#D1D5DB"></div>
+                      <div class="bar" style="height:100%;background:#D1D5DB"></div>
+                    </div>
+                  </div>
+                  <div class="pred-right">
+                    <div class="pred-pct" style="color:var(--red)">+33%</div>
+                    <div class="pred-days">dalam 0 hari</div>
+                    <div class="pred-pill pill-buy">🛒 Buy Now</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Radius Hemat / Map card -->
+            <div class="card">
+              <div class="card-head">
+                <span class="card-title">
+                  <svg viewBox="0 0 14 14" fill="none">
+                    <circle cx="7" cy="6" r="2.5" stroke="currentColor" stroke-width="1.3"/>
+                    <path d="M7 12S3 9.2 3 6a4 4 0 0 1 8 0c0 3.2-4 6-4 6z"
+                      stroke="currentColor" stroke-width="1.3" fill="none"/>
+                  </svg>
+                  Radius Hemat
+                </span>
+                <span class="tag tag-blue">3 Pasar</span>
+              </div>
+              <div class="card-body">
+                <div class="map-box">
+                  <div class="map-road" style="height:1px;top:50%;left:0;right:0"></div>
+                  <div class="map-road" style="width:1px;left:35%;top:0;bottom:0"></div>
+                  <div class="map-pin" style="left:22%;top:22%">
+                    <div class="pin-circle" style="background:var(--g2)"></div>
+                    <div class="pin-lbl">Pasar Minggu</div>
+                  </div>
+                  <div class="map-pin" style="left:55%;top:30%">
+                    <div class="pin-circle" style="background:var(--amb)"></div>
+                    <div class="pin-lbl">Pasar Santa</div>
+                  </div>
+                  <div class="map-pin" style="left:65%;top:55%">
+                    <div class="pin-circle" style="background:var(--red)"></div>
+                    <div class="pin-lbl">Pasar Mayestik</div>
+                  </div>
+                  <div class="you-dot" style="left:36%;top:44%"></div>
+                  <div class="map-legend">
+                    <div class="ml"><div class="ml-dot" style="background:var(--g2)"></div>Termurah</div>
+                    <div class="ml"><div class="ml-dot" style="background:var(--amb)"></div>Sedang</div>
+                    <div class="ml"><div class="ml-dot" style="background:var(--red)"></div>Mahal</div>
+                  </div>
+                </div>
+                <div class="market-row">
+                  <div class="mkt-rank" style="background:var(--g4);color:var(--g2)">1</div>
+                  <div class="mkt-info">
+                    <div class="mkt-name">Pasar Minggu</div>
+                    <div class="mkt-detail">0.8 km · Cabai Rp 65.000 · Bawang Rp 38.000</div>
+                  </div>
+                  <span class="tag tag-green">Termurah</span>
+                </div>
+                <div class="market-row">
+                  <div class="mkt-rank" style="background:var(--amb-p);color:var(--amb)">2</div>
+                  <div class="mkt-info">
+                    <div class="mkt-name">Pasar Santa</div>
+                    <div class="mkt-detail">1.2 km · Cabai Rp 75.000 · Bawang Rp 42.000</div>
+                  </div>
+                  <span class="tag tag-amber">Sedang</span>
+                </div>
+                <div class="market-row" style="margin-bottom:0">
+                  <div class="mkt-rank" style="background:var(--red-p);color:var(--red)">3</div>
+                  <div class="mkt-info">
+                    <div class="mkt-name">Pasar Mayestik</div>
+                    <div class="mkt-detail">2.1 km · Cabai Rp 85.000 · Bawang Rp 45.000</div>
+                  </div>
+                  <span class="tag tag-red">Mahal</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right column -->
+          <div class="col">
+            <!-- Dapur Digital mini -->
+            <div class="card">
+              <div class="card-head">
+                <span class="card-title">🍳 Dapur Digital</span>
+                <button class="btn btn-g btn-sm add-kitchen-btn">+ Tambah</button>
+              </div>
+              <div class="card-body">
+                <div class="stock-item">
+                  <div class="s-emoji">🌾</div>
+                  <div class="s-info"><div class="s-name">Beras</div><div class="s-qty">5 kg</div></div>
+                  <div class="s-bar-wrap">
+                    <div class="s-bar"><div class="s-fill" style="width:65%;background:var(--g3)"></div></div>
+                    <div class="s-pct" style="color:var(--g2)">65%</div>
+                  </div>
+                  <div class="s-days" style="background:var(--g4);color:var(--g2)">120 hari</div>
+                </div>
+                <div class="stock-item">
+                  <div class="s-emoji">🥚</div>
+                  <div class="s-info"><div class="s-name">Telur</div><div class="s-qty">10 butir</div></div>
+                  <div class="s-bar-wrap">
+                    <div class="s-bar"><div class="s-fill" style="width:35%;background:#F59E0B"></div></div>
+                    <div class="s-pct" style="color:var(--amb)">35%</div>
+                  </div>
+                  <div class="s-days" style="background:var(--amb-p);color:var(--amb)">5 hari</div>
+                </div>
+                <div class="stock-item" style="border-color:#FECACA">
+                  <div class="s-emoji">🧈</div>
+                  <div class="s-info"><div class="s-name">Mentega</div><div class="s-qty">200 g</div></div>
+                  <div class="s-bar-wrap">
+                    <div class="s-bar"><div class="s-fill" style="width:15%;background:var(--red)"></div></div>
+                    <div class="s-pct" style="color:var(--red)">15%</div>
+                  </div>
+                  <div class="s-days" style="background:var(--red-p);color:var(--red)">Hari ini!</div>
+                </div>
+                <div class="stock-item">
+                  <div class="s-emoji">🥛</div>
+                  <div class="s-info"><div class="s-name">Susu</div><div class="s-qty">1 L</div></div>
+                  <div class="s-bar-wrap">
+                    <div class="s-bar"><div class="s-fill" style="width:70%;background:var(--g3)"></div></div>
+                    <div class="s-pct" style="color:var(--g2)">70%</div>
+                  </div>
+                  <div class="s-days" style="background:var(--g4);color:var(--g2)">7 hari</div>
+                </div>
+                <div class="stock-item" style="margin-bottom:0">
+                  <div class="s-emoji">🍞</div>
+                  <div class="s-info"><div class="s-name">Roti Tawar</div><div class="s-qty">1 pak</div></div>
+                  <div class="s-bar-wrap">
+                    <div class="s-bar"><div class="s-fill" style="width:25%;background:#F59E0B"></div></div>
+                    <div class="s-pct" style="color:var(--amb)">25%</div>
+                  </div>
+                  <div class="s-days" style="background:var(--amb-p);color:var(--amb)">2 hari</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Beli Bareng mini -->
+            <div class="card">
+              <div class="card-head">
+                <span class="card-title">👥 Beli Bareng</span>
+                <span class="tag tag-green">3 Aktif</span>
+              </div>
+              <div class="card-body">
+                <div class="gb-item">
+                  <div class="gb-top">
+                    <div>
+                      <div class="gb-name">Beras Premium 25kg</div>
+                      <div class="gb-price">Rp 275.000/org</div>
+                      <div class="gb-save">Hemat Rp 50.000</div>
+                    </div>
+                    <span class="tag tag-amber" style="font-size:9px">2 hari lagi</span>
+                  </div>
+                  <div class="gb-meta" style="margin-bottom:4px">7/10 peserta</div>
+                  <div class="gb-prog"><div class="gb-fill" style="width:70%"></div></div>
+                  <div class="gb-bottom">
+                    <div class="gb-avs">
+                      <div class="av-sm" style="background:#D8F3DC;color:var(--g2)">IB</div>
+                      <div class="av-sm" style="background:#BFDBFE;color:var(--blu)">AS</div>
+                      <div class="av-sm" style="background:#FDE8AA;color:var(--amb)">DR</div>
+                      <div class="av-sm" style="background:var(--bdr);color:var(--text3)">+4</div>
+                    </div>
+                    <button class="btn btn-out btn-sm gb-join-btn">Join Group</button>
+                  </div>
+                </div>
+                <div class="gb-item">
+                  <div class="gb-top">
+                    <div>
+                      <div class="gb-name">Minyak Goreng 5L</div>
+                      <div class="gb-price">Rp 85.000/org</div>
+                      <div class="gb-save">Hemat Rp 25.000</div>
+                    </div>
+                    <span class="tag tag-green" style="font-size:9px">Ready!</span>
+                  </div>
+                  <div class="gb-meta" style="margin-bottom:4px">8/8 peserta — penuh</div>
+                  <div class="gb-prog"><div class="gb-fill" style="width:100%"></div></div>
+                  <div class="gb-bottom">
+                    <div class="gb-avs">
+                      <div class="av-sm" style="background:#D8F3DC;color:var(--g2)">IB</div>
+                      <div class="av-sm" style="background:#BFDBFE;color:var(--blu)">AS</div>
+                      <div class="av-sm" style="background:var(--bdr);color:var(--text3)">+6</div>
+                    </div>
+                    <button class="btn btn-g btn-sm">Checkout</button>
+                  </div>
+                </div>
+                <div class="gb-item" style="margin-bottom:0">
+                  <div class="gb-top">
+                    <div>
+                      <div class="gb-name">Telur 1 Tray (30pcs)</div>
+                      <div class="gb-price">Rp 45.000/org</div>
+                      <div class="gb-save">Hemat Rp 15.000</div>
+                    </div>
+                    <span class="tag tag-blue" style="font-size:9px">5 hari lagi</span>
+                  </div>
+                  <div class="gb-meta" style="margin-bottom:4px">4/12 peserta</div>
+                  <div class="gb-prog"><div class="gb-fill" style="width:33%"></div></div>
+                  <div class="gb-bottom">
+                    <div class="gb-avs">
+                      <div class="av-sm" style="background:#D8F3DC;color:var(--g2)">IB</div>
+                      <div class="av-sm" style="background:#BFDBFE;color:var(--blu)">AS</div>
+                      <div class="av-sm" style="background:var(--bdr);color:var(--text3)">+2</div>
+                    </div>
+                    <button class="btn btn-out btn-sm gb-join-btn">Join Group</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div><!-- /page-dashboard -->
+
+
+      <!-- ──────────────── PRICE PREDICTOR ──────────────── -->
+      <div class="page" id="page-predictor">
+        <div class="pg-head">
+          <div class="pg-title">Price Predictor</div>
+          <div class="pg-sub">Prediksi harga bahan pokok berbasis AI</div>
+        </div>
+
+        <div class="toast blue">
+          <svg viewBox="0 0 15 15" fill="none">
+            <circle cx="7.5" cy="7.5" r="6" stroke="currentColor" stroke-width="1.3"/>
+            <path d="M7.5 5v4M7.5 10.5v.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+          <div>Prediksi diperbarui setiap hari berdasarkan data pasar WFP Indonesia.</div>
+        </div>
+
+        <div class="card" id="predictor-forecast-card">
+          <div class="card-head">
+            <span class="card-title">🔮 Prediksi Harga AI</span>
+            <span class="tag tag-green">Backend Aktif</span>
+          </div>
+          <div class="card-body" id="predictor-forecast-body">
+            <p style="padding:16px;color:var(--text3);margin:0">
+              Memuat prediksi harga dari API...
+            </p>
+          </div>
+        </div>
+
+        <div class="grid3">
+          <div class="card">
+            <div class="card-head">
+              <span class="card-title">🌶️ Cabai Merah</span>
+              <span class="pred-pill pill-wait">Delay</span>
+            </div>
+            <div class="card-body">
+              <div style="font-size:20px;font-weight:700;color:var(--g2)">-21%</div>
+              <div style="font-size:11px;color:var(--text3);margin-bottom:10px">Rp 85.000 → Rp 67.000 dalam 2 hari</div>
+              <div class="line-chart">
+                <div class="lc-bar" style="height:85%"></div>
+                <div class="lc-bar" style="height:72%"></div>
+                <div class="lc-bar" style="height:100%;background:var(--g2);opacity:1"></div>
+                <div class="lc-bar" style="height:78%"></div>
+                <div class="lc-bar" style="height:82%"></div>
+              </div>
+              <div class="lc-labels">
+                <div class="lc-lbl">Hari ini</div><div class="lc-lbl">D+1</div>
+                <div class="lc-lbl">D+2</div><div class="lc-lbl">D+3</div><div class="lc-lbl">D+4</div>
+              </div>
+              <button class="btn btn-y" style="width:100%;justify-content:center;margin-top:10px">⏳ Delay Purchase</button>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-head">
+              <span class="card-title">🧄 Bawang Putih</span>
+              <span class="pred-pill pill-watch">Watch</span>
+            </div>
+            <div class="card-body">
+              <div style="font-size:20px;font-weight:700;color:var(--g2)">-7%</div>
+              <div style="font-size:11px;color:var(--text3);margin-bottom:10px">Rp 42.000 → Rp 39.000 dalam 1 hari</div>
+              <div class="line-chart">
+                <div class="lc-bar" style="height:100%"></div>
+                <div class="lc-bar" style="height:90%;background:var(--g2);opacity:1"></div>
+                <div class="lc-bar" style="height:93%"></div>
+                <div class="lc-bar" style="height:95%"></div>
+                <div class="lc-bar" style="height:92%"></div>
+              </div>
+              <div class="lc-labels">
+                <div class="lc-lbl">Hari ini</div><div class="lc-lbl">D+1</div>
+                <div class="lc-lbl">D+2</div><div class="lc-lbl">D+3</div><div class="lc-lbl">D+4</div>
+              </div>
+              <button class="btn btn-out" style="width:100%;justify-content:center;margin-top:10px">👁 Keep Watching</button>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-head">
+              <span class="card-title">🍅 Tomat</span>
+              <span class="pred-pill pill-buy">Buy!</span>
+            </div>
+            <div class="card-body">
+              <div style="font-size:20px;font-weight:700;color:var(--red)">+33%</div>
+              <div style="font-size:11px;color:var(--text3);margin-bottom:10px">Rp 12.000 → Rp 16.000 hari ini</div>
+              <div class="line-chart">
+                <div class="lc-bar" style="height:60%"></div>
+                <div class="lc-bar" style="height:65%"></div>
+                <div class="lc-bar" style="height:75%"></div>
+                <div class="lc-bar" style="height:90%"></div>
+                <div class="lc-bar" style="height:100%;background:#DC2626;opacity:0.7"></div>
+              </div>
+              <div class="lc-labels">
+                <div class="lc-lbl">Hari ini</div><div class="lc-lbl">D+1</div>
+                <div class="lc-lbl">D+2</div><div class="lc-lbl">D+3</div><div class="lc-lbl">D+4</div>
+              </div>
+              <button class="btn btn-g" style="width:100%;justify-content:center;margin-top:10px">🛒 Buy Now</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head">
+            <span class="card-title">Semua Bahan Pokok</span>
+            <span class="tag tag-blue">Data WFP</span>
+          </div>
+          <div class="card-body" style="padding:0">
+            <table>
+              <thead>
+                <tr><th>Komoditas</th><th>Harga Hari Ini</th><th>Prediksi</th><th>Perubahan</th><th>Rekomendasi</th></tr>
+              </thead>
+              <tbody id="predictor-table-body">
+                <tr><td colspan="5" style="padding:16px;color:var(--text3);text-align:center">
+                  Memuat data prediksi dari API...
+                </td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div><!-- /page-predictor -->
+
+
+      <!-- ──────────────── SAVINGS MAP ──────────────── -->
+      <div class="page" id="page-map">
+        <div class="pg-head">
+          <div class="pg-title">Savings Map</div>
+          <div class="pg-sub">Temukan pasar termurah di sekitar kamu</div>
+        </div>
+
+        <div class="card">
+          <div class="card-body">
+            <div class="map-box" style="height:200px">
+              <div class="map-road" style="height:1px;top:50%;left:0;right:0;background:rgba(255,255,255,0.7)"></div>
+              <div class="map-road" style="width:1px;left:38%;top:0;bottom:0;background:rgba(255,255,255,0.7)"></div>
+              <div class="map-road" style="height:1px;top:72%;left:0;right:0;background:rgba(255,255,255,0.4)"></div>
+              <div class="map-pin" style="left:18%;top:28%">
+                <div class="pin-circle" style="background:var(--g2)"></div>
+                <div class="pin-lbl">Pasar Minggu ⭐</div>
+              </div>
+              <div class="map-pin" style="left:52%;top:22%">
+                <div class="pin-circle" style="background:var(--amb)"></div>
+                <div class="pin-lbl">Pasar Santa</div>
+              </div>
+              <div class="map-pin" style="left:63%;top:56%">
+                <div class="pin-circle" style="background:var(--red)"></div>
+                <div class="pin-lbl">Pasar Mayestik</div>
+              </div>
+              <div class="you-dot" style="left:37%;top:46%"></div>
+              <div style="position:absolute;left:39%;top:48%;font-size:9px;font-weight:600;color:var(--blu)">📍 Lokasi kamu</div>
+              <div class="map-legend">
+                <div class="ml"><div class="ml-dot" style="background:var(--g2)"></div>Termurah</div>
+                <div class="ml"><div class="ml-dot" style="background:var(--amb)"></div>Sedang</div>
+                <div class="ml"><div class="ml-dot" style="background:var(--red)"></div>Mahal</div>
+                <div class="ml"><div class="ml-dot" style="background:var(--blu)"></div>Kamu</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head">
+            <span class="card-title">Daftar Pasar Terdekat</span>
+            <span class="tag tag-blue">3 Pasar Ditemukan</span>
+          </div>
+          <div class="card-body" style="padding:0">
+            <table>
+              <thead><tr><th>#</th><th>Nama Pasar</th><th>Jarak</th><th>Cabai</th><th>Bawang</th><th>Status</th></tr></thead>
+              <tbody>
+                <tr><td style="font-weight:700;color:var(--g2)">1</td><td style="font-weight:600">Pasar Minggu</td><td>0.8 km</td><td style="color:var(--g2);font-weight:600">Rp 65.000</td><td style="color:var(--g2);font-weight:600">Rp 38.000</td><td><span class="tag tag-green">Termurah</span></td></tr>
+                <tr><td style="font-weight:700;color:var(--amb)">2</td><td style="font-weight:600">Pasar Santa</td><td>1.2 km</td><td style="color:var(--amb);font-weight:600">Rp 75.000</td><td style="color:var(--amb);font-weight:600">Rp 42.000</td><td><span class="tag tag-amber">Sedang</span></td></tr>
+                <tr><td style="font-weight:700;color:var(--red)">3</td><td style="font-weight:600">Pasar Mayestik</td><td>2.1 km</td><td style="color:var(--red);font-weight:600">Rp 85.000</td><td style="color:var(--red);font-weight:600">Rp 45.000</td><td><span class="tag tag-red">Mahal</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div><!-- /page-map -->
+
+
+      <!-- ──────────────── DIGITAL KITCHEN ──────────────── -->
+      <div class="page" id="page-pantry">
+        <div class="pg-head">
+          <div class="pg-title">Digital Kitchen</div>
+          <div class="pg-sub">Pantau dan input komoditas bahan dapur kamu</div>
+        </div>
+
+        <div class="toast red">
+          <svg viewBox="0 0 15 15" fill="none">
+            <path d="M7.5 2L1 13h13L7.5 2z" stroke="currentColor" stroke-width="1.3"/>
+            <path d="M7.5 6v4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            <circle cx="7.5" cy="11.5" r="0.7" fill="currentColor"/>
+          </svg>
+          <div>
+            <div class="toast-title">2 bahan perlu perhatian segera!</div>
+            Mentega kadaluarsa hari ini, Roti Tawar 2 hari lagi.
+          </div>
+        </div>
+
+        <div class="grid2">
+          <!-- Left: Form Input Komoditas -->
+          <div class="col">
+            <div class="card">
+              <div class="card-head">
+                <span class="card-title">➕ Input Komoditas Baru</span>
+              </div>
+              <div class="card-body">
+                <!--
+                  ✦ DINAMIS: form ini di-handle oleh handlePantryForm() di app.js
+                  Submit akan POST ke /api/commodity dan refresh data secara otomatis
+                -->
+                <form id="form-add-commodity">
+                  <div class="form-group">
+                    <label class="form-label">Nama Komoditas</label>
+                    <input
+                      id="input-comm-name"
+                      class="form-input"
+                      type="text"
+                      placeholder="cth: Beras, Cabai Merah, Telur..."
+                      required
+                    />
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Harga (Rp/kg)</label>
+                    <input
+                      id="input-comm-price"
+                      class="form-input"
+                      type="number"
+                      placeholder="cth: 14000"
+                      min="0"
+                      required
+                    />
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Sumber / Nama Pasar</label>
+                    <input
+                      id="input-comm-source"
+                      class="form-input"
+                      type="text"
+                      placeholder="cth: Pasar Minggu, Indomaret..."
+                      required
+                    />
+                  </div>
+                  <button type="submit" class="btn btn-g" style="width:100%;justify-content:center;margin-top:4px">
+                    💾 Simpan ke Database
+                  </button>
+                </form>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right: Grid Card Komoditas dari API -->
+          <div class="col">
+            <div class="card">
+              <div class="card-head">
+                <span class="card-title">📦 Data Komoditas Tersimpan</span>
+                <span class="tag tag-blue">Live dari DB</span>
+              </div>
+              <div class="card-body">
+                <!--
+                  ✦ DINAMIS: diisi oleh loadPantryItems() via API /api/commodity
+                  Konten di sini akan di-replace otomatis dengan data dari wareg.db
+                -->
+                <div id="pantry-items-container" style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+                  <p style="padding:20px;color:var(--text3);grid-column:1/-1">
+                    <span style="display:block;text-align:center;font-size:24px;margin-bottom:8px">⏳</span>
+                    Memuat data dari database...
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tabel stok bahan (data statis sebagai referensi) -->
+        <div class="card">
+          <div class="card-head">
+            <span class="card-title">🍳 Stok Bahan Dapur</span>
+            <button class="btn btn-g btn-sm add-kitchen-btn">+ Tambah Bahan</button>
+          </div>
+          <div class="card-body" style="padding:0">
+            <table>
+              <thead><tr><th>Bahan</th><th>Jumlah</th><th>Sisa Stok</th><th>Kadaluarsa</th><th>Status</th></tr></thead>
+              <tbody>
+                <tr>
+                  <td><span style="font-size:16px">🌾</span> Beras</td><td>5 kg</td>
+                  <td><div style="display:flex;align-items:center;gap:8px"><div style="width:80px;height:5px;background:var(--bdr);border-radius:3px;overflow:hidden"><div style="width:65%;height:100%;background:var(--g3);border-radius:3px"></div></div><span style="font-size:11px;color:var(--g2);font-weight:600">65%</span></div></td>
+                  <td style="color:var(--g2);font-weight:500">120 hari lagi</td><td><span class="tag tag-green">Aman</span></td>
+                </tr>
+                <tr>
+                  <td><span style="font-size:16px">🥚</span> Telur</td><td>10 butir</td>
+                  <td><div style="display:flex;align-items:center;gap:8px"><div style="width:80px;height:5px;background:var(--bdr);border-radius:3px;overflow:hidden"><div style="width:35%;height:100%;background:#F59E0B;border-radius:3px"></div></div><span style="font-size:11px;color:var(--amb);font-weight:600">35%</span></div></td>
+                  <td style="color:var(--amb);font-weight:500">5 hari lagi</td><td><span class="tag tag-amber">Perhatian</span></td>
+                </tr>
+                <tr>
+                  <td><span style="font-size:16px">🧈</span> Mentega</td><td>200 g</td>
+                  <td><div style="display:flex;align-items:center;gap:8px"><div style="width:80px;height:5px;background:var(--bdr);border-radius:3px;overflow:hidden"><div style="width:15%;height:100%;background:var(--red);border-radius:3px"></div></div><span style="font-size:11px;color:var(--red);font-weight:600">15%</span></div></td>
+                  <td style="color:var(--red);font-weight:700">⛔ Hari ini!</td><td><span class="tag tag-red">Kritis</span></td>
+                </tr>
+                <tr>
+                  <td><span style="font-size:16px">🥛</span> Susu</td><td>1 L</td>
+                  <td><div style="display:flex;align-items:center;gap:8px"><div style="width:80px;height:5px;background:var(--bdr);border-radius:3px;overflow:hidden"><div style="width:70%;height:100%;background:var(--g3);border-radius:3px"></div></div><span style="font-size:11px;color:var(--g2);font-weight:600">70%</span></div></td>
+                  <td style="color:var(--g2);font-weight:500">7 hari lagi</td><td><span class="tag tag-green">Aman</span></td>
+                </tr>
+                <tr>
+                  <td><span style="font-size:16px">🍞</span> Roti Tawar</td><td>1 pak</td>
+                  <td><div style="display:flex;align-items:center;gap:8px"><div style="width:80px;height:5px;background:var(--bdr);border-radius:3px;overflow:hidden"><div style="width:25%;height:100%;background:#F59E0B;border-radius:3px"></div></div><span style="font-size:11px;color:var(--amb);font-weight:600">25%</span></div></td>
+                  <td style="color:var(--amb);font-weight:500">2 hari lagi</td><td><span class="tag tag-amber">Perhatian</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div><!-- /page-pantry -->
+
+
+      <!-- ──────────────── GROUP BUY ──────────────── -->
+      <div class="page" id="page-groupbuy">
+        <div class="pg-head">
+          <div class="pg-title">Group Buy</div>
+          <div class="pg-sub">Belanja bersama tetangga, hemat lebih banyak</div>
+        </div>
+
+        <div class="stats" style="grid-template-columns:repeat(3,1fr)">
+          <div class="stat"><div class="stat-label">Grup Aktif</div><div class="stat-val">3</div><div class="stat-change up">di area kamu</div></div>
+          <div class="stat"><div class="stat-label">Siap Checkout</div><div class="stat-val" style="color:var(--g2)">1</div><div class="stat-change up">Minyak Goreng 5L</div></div>
+          <div class="stat"><div class="stat-label">Total Hemat</div><div class="stat-val">Rp 90k</div><div class="stat-change up">jika semua join</div></div>
+        </div>
+
+        <div class="grid2">
+          <div class="col">
+            <div class="card">
+              <div class="card-head">
+                <span class="card-title">Beras Premium 25kg</span>
+                <span class="tag tag-amber">2 hari lagi</span>
+              </div>
+              <div class="card-body">
+                <div style="display:flex;justify-content:space-between;margin-bottom:10px">
+                  <div>
+                    <div style="font-size:18px;font-weight:700;color:var(--g2)">Rp 275.000<span style="font-size:12px;color:var(--text3);font-weight:400">/orang</span></div>
+                    <div style="font-size:11px;color:var(--g3);font-weight:600">Hemat Rp 50.000</div>
+                  </div>
+                  <span class="tag tag-amber">7/10 peserta</span>
+                </div>
+                <div class="gb-prog" style="height:7px;margin-bottom:8px"><div class="gb-fill" style="width:70%"></div></div>
+                <div class="gb-avs" style="margin-bottom:12px">
+                  <div class="av-sm" style="background:#D8F3DC;color:var(--g2)">IB</div>
+                  <div class="av-sm" style="background:#BFDBFE;color:var(--blu)">AS</div>
+                  <div class="av-sm" style="background:#FDE8AA;color:var(--amb)">DR</div>
+                  <div class="av-sm" style="background:var(--red-p);color:var(--red)">SM</div>
+                  <div class="av-sm" style="background:var(--bdr);color:var(--text3)">+3</div>
+                </div>
+                <button class="btn btn-out gb-join-btn" style="width:100%;justify-content:center">Join Group</button>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-head">
+                <span class="card-title">Telur 1 Tray (30pcs)</span>
+                <span class="tag tag-blue">5 hari lagi</span>
+              </div>
+              <div class="card-body">
+                <div style="display:flex;justify-content:space-between;margin-bottom:10px">
+                  <div>
+                    <div style="font-size:18px;font-weight:700;color:var(--g2)">Rp 45.000<span style="font-size:12px;color:var(--text3);font-weight:400">/orang</span></div>
+                    <div style="font-size:11px;color:var(--g3);font-weight:600">Hemat Rp 15.000</div>
+                  </div>
+                  <span class="tag tag-blue">4/12 peserta</span>
+                </div>
+                <div class="gb-prog" style="height:7px;margin-bottom:8px"><div class="gb-fill" style="width:33%"></div></div>
+                <div class="gb-avs" style="margin-bottom:12px">
+                  <div class="av-sm" style="background:#D8F3DC;color:var(--g2)">IB</div>
+                  <div class="av-sm" style="background:#BFDBFE;color:var(--blu)">AS</div>
+                  <div class="av-sm" style="background:var(--bdr);color:var(--text3)">+2</div>
+                </div>
+                <button class="btn btn-out gb-join-btn" style="width:100%;justify-content:center">Join Group</button>
+              </div>
+            </div>
+          </div>
+          <div class="col">
+            <div class="card" style="border-color:var(--g3)">
+              <div class="card-head" style="background:var(--g5)">
+                <span class="card-title">Minyak Goreng 5L</span>
+                <span class="tag tag-green">✓ Ready!</span>
+              </div>
+              <div class="card-body">
+                <div style="display:flex;justify-content:space-between;margin-bottom:10px">
+                  <div>
+                    <div style="font-size:18px;font-weight:700;color:var(--g2)">Rp 85.000<span style="font-size:12px;color:var(--text3);font-weight:400">/orang</span></div>
+                    <div style="font-size:11px;color:var(--g3);font-weight:600">Hemat Rp 25.000</div>
+                  </div>
+                  <span class="tag tag-green">8/8 penuh!</span>
+                </div>
+                <div class="gb-prog" style="height:7px;margin-bottom:8px"><div class="gb-fill" style="width:100%"></div></div>
+                <div class="gb-avs" style="margin-bottom:12px">
+                  <div class="av-sm" style="background:#D8F3DC;color:var(--g2)">IB</div>
+                  <div class="av-sm" style="background:#BFDBFE;color:var(--blu)">AS</div>
+                  <div class="av-sm" style="background:#FDE8AA;color:var(--amb)">DR</div>
+                  <div class="av-sm" style="background:var(--bdr);color:var(--text3)">+5</div>
+                </div>
+                <button class="btn btn-g" style="width:100%;justify-content:center">🛒 Checkout Sekarang</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div><!-- /page-groupbuy -->
+
+
+      <!-- ──────────────── PURCHASE HISTORY ──────────────── -->
+      <div class="page" id="page-history">
+        <div class="pg-head">
+          <div class="pg-title">Purchase History</div>
+          <div class="pg-sub">Riwayat belanja dan penghematan kamu</div>
+        </div>
+
+        <div class="stats">
+          <div class="stat"><div class="stat-label">Total Belanja</div><div class="stat-val">Rp 1,2jt</div><div class="stat-change neu">bulan ini</div></div>
+          <div class="stat"><div class="stat-label">Total Hemat</div><div class="stat-val" style="color:var(--g2)">Rp 427k</div><div class="stat-change up">↑ 15% vs bulan lalu</div></div>
+          <div class="stat"><div class="stat-label">Transaksi</div><div class="stat-val">12</div><div class="stat-change neu">pembelian</div></div>
+          <div class="stat"><div class="stat-label">Pasar Terfavorit</div><div class="stat-val" style="font-size:14px">Pasar Minggu</div><div class="stat-change neu">5 kunjungan</div></div>
+        </div>
+
+        <div class="card">
+          <div class="card-head">
+            <span class="card-title">Riwayat Transaksi</span>
+            <span class="tag tag-blue">Maret 2025</span>
+          </div>
+          <div class="card-body" style="padding:0">
+            <table>
+              <thead><tr><th>Tanggal</th><th>Item</th><th>Pasar</th><th>Total</th><th>Hemat</th></tr></thead>
+              <tbody>
+                <tr><td style="color:var(--text3)">15 Mar</td><td>🌾 Beras 5kg, 🥚 Telur 1 tray</td><td>Pasar Minggu</td><td style="font-weight:600">Rp 134.000</td><td style="color:var(--g2);font-weight:600">Rp 21.000</td></tr>
+                <tr><td style="color:var(--text3)">12 Mar</td><td>🧄 Bawang Putih 500g</td><td>Pasar Minggu</td><td style="font-weight:600">Rp 21.000</td><td style="color:var(--g2);font-weight:600">Rp 3.000</td></tr>
+                <tr><td style="color:var(--text3)">10 Mar</td><td>🛢️ Minyak Goreng 5L (Group Buy)</td><td>Distributor</td><td style="font-weight:600">Rp 85.000</td><td style="color:var(--g2);font-weight:600">Rp 25.000</td></tr>
+                <tr><td style="color:var(--text3)">8 Mar</td><td>🍅 Tomat 1kg, 🌶️ Cabai 500g</td><td>Pasar Santa</td><td style="font-weight:600">Rp 49.500</td><td style="color:var(--text3)">-</td></tr>
+                <tr><td style="color:var(--text3)">5 Mar</td><td>🌾 Beras 25kg (Group Buy)</td><td>Distributor</td><td style="font-weight:600">Rp 275.000</td><td style="color:var(--g2);font-weight:600">Rp 50.000</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div><!-- /page-history -->
+
+
+      <!-- ──────────────── PRICE TRENDS ──────────────── -->
+      <div class="page" id="page-trends">
+        <div class="pg-head">
+          <div class="pg-title">Price Trends</div>
+          <div class="pg-sub">Tren harga bahan pokok dari database kamu</div>
+        </div>
+
+        <!--
+          ✦ DINAMIS: seluruh konten di dalam trends-list-container
+          diisi oleh loadPriceTrends() via API /api/commodity
+          Setiap item akan tampil sebagai .trend-item dengan bar proporsional
+        -->
+        <div class="card">
+          <div class="card-head">
+            <span class="card-title">📊 Daftar Tren Harga</span>
+            <span class="tag tag-blue">Live dari DB</span>
+          </div>
+          <div class="card-body">
+            <div id="trends-list-container">
+              <p style="padding:16px;color:var(--text3)">
+                <span style="display:block;text-align:center;font-size:24px;margin-bottom:8px">⏳</span>
+                Memuat data tren harga...
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Chart statis sebagai referensi visual tambahan -->
+        <div class="grid2" style="grid-template-columns:1fr 1fr">
+          <div class="trend-area">
+            <div class="card-title" style="margin-bottom:8px">🌶️ Cabai Merah (Rp/kg)</div>
+            <div class="trend-labels"><div class="tl-item"><div class="tl-dot" style="background:var(--g3)"></div>Harga Aktual</div></div>
+            <div class="line-chart" style="height:80px">
+              <div class="lc-bar" style="height:90%"></div><div class="lc-bar" style="height:95%"></div>
+              <div class="lc-bar" style="height:100%"></div><div class="lc-bar" style="height:88%"></div>
+              <div class="lc-bar" style="height:82%"></div><div class="lc-bar" style="height:75%"></div>
+              <div class="lc-bar" style="height:70%"></div><div class="lc-bar" style="height:78%"></div>
+              <div class="lc-bar" style="height:85%"></div><div class="lc-bar" style="height:80%"></div>
+            </div>
+            <div style="display:flex;justify-content:space-between;margin-top:6px;font-size:9px;color:var(--text4)"><span>1 Mar</span><span>15 Mar</span><span>Hari ini</span></div>
+            <div style="margin-top:8px;font-size:11px;color:var(--text3)">Min: <b style="color:var(--g2)">Rp 67.000</b> · Maks: <b style="color:var(--red)">Rp 95.000</b> · Rata-rata: <b>Rp 82.000</b></div>
+          </div>
+          <div class="trend-area">
+            <div class="card-title" style="margin-bottom:8px">🧄 Bawang Putih (Rp/kg)</div>
+            <div class="trend-labels"><div class="tl-item"><div class="tl-dot" style="background:var(--blu)"></div>Harga Aktual</div></div>
+            <div class="line-chart" style="height:80px">
+              <div class="lc-bar" style="height:70%;background:var(--blu);opacity:0.6"></div><div class="lc-bar" style="height:75%;background:var(--blu);opacity:0.6"></div>
+              <div class="lc-bar" style="height:80%;background:var(--blu);opacity:0.6"></div><div class="lc-bar" style="height:85%;background:var(--blu);opacity:0.6"></div>
+              <div class="lc-bar" style="height:90%;background:var(--blu);opacity:0.6"></div><div class="lc-bar" style="height:100%;background:var(--blu);opacity:0.6"></div>
+              <div class="lc-bar" style="height:95%;background:var(--blu);opacity:0.6"></div><div class="lc-bar" style="height:88%;background:var(--blu);opacity:0.6"></div>
+              <div class="lc-bar" style="height:92%;background:var(--blu);opacity:0.6"></div><div class="lc-bar" style="height:85%;background:var(--blu);opacity:0.6"></div>
+            </div>
+            <div style="display:flex;justify-content:space-between;margin-top:6px;font-size:9px;color:var(--text4)"><span>1 Mar</span><span>15 Mar</span><span>Hari ini</span></div>
+            <div style="margin-top:8px;font-size:11px;color:var(--text3)">Min: <b style="color:var(--g2)">Rp 36.000</b> · Maks: <b style="color:var(--red)">Rp 48.000</b> · Rata-rata: <b>Rp 42.000</b></div>
+          </div>
+          <div class="trend-area">
+            <div class="card-title" style="margin-bottom:8px">🍅 Tomat (Rp/kg)</div>
+            <div class="line-chart" style="height:80px">
+              <div class="lc-bar" style="height:40%;background:var(--red);opacity:0.5"></div><div class="lc-bar" style="height:45%;background:var(--red);opacity:0.5"></div>
+              <div class="lc-bar" style="height:50%;background:var(--red);opacity:0.5"></div><div class="lc-bar" style="height:55%;background:var(--red);opacity:0.5"></div>
+              <div class="lc-bar" style="height:60%;background:var(--red);opacity:0.5"></div><div class="lc-bar" style="height:70%;background:var(--red);opacity:0.5"></div>
+              <div class="lc-bar" style="height:80%;background:var(--red);opacity:0.5"></div><div class="lc-bar" style="height:90%;background:var(--red);opacity:0.6"></div>
+              <div class="lc-bar" style="height:95%;background:var(--red);opacity:0.7"></div><div class="lc-bar" style="height:100%;background:var(--red);opacity:0.8"></div>
+            </div>
+            <div style="display:flex;justify-content:space-between;margin-top:6px;font-size:9px;color:var(--text4)"><span>1 Mar</span><span>15 Mar</span><span>Hari ini</span></div>
+            <div style="margin-top:8px;font-size:11px;color:var(--text3)">Min: <b style="color:var(--g2)">Rp 8.000</b> · Maks: <b style="color:var(--red)">Rp 16.000</b> · Rata-rata: <b>Rp 11.500</b></div>
+          </div>
+          <div class="trend-area">
+            <div class="card-title" style="margin-bottom:8px">🌾 Beras (Rp/kg)</div>
+            <div class="line-chart" style="height:80px">
+              <div class="lc-bar" style="height:92%;background:var(--amb);opacity:0.6"></div><div class="lc-bar" style="height:94%;background:var(--amb);opacity:0.6"></div>
+              <div class="lc-bar" style="height:90%;background:var(--amb);opacity:0.6"></div><div class="lc-bar" style="height:95%;background:var(--amb);opacity:0.6"></div>
+              <div class="lc-bar" style="height:98%;background:var(--amb);opacity:0.6"></div><div class="lc-bar" style="height:100%;background:var(--amb);opacity:0.6"></div>
+              <div class="lc-bar" style="height:96%;background:var(--amb);opacity:0.6"></div><div class="lc-bar" style="height:93%;background:var(--amb);opacity:0.6"></div>
+              <div class="lc-bar" style="height:91%;background:var(--amb);opacity:0.6"></div><div class="lc-bar" style="height:94%;background:var(--amb);opacity:0.6"></div>
+            </div>
+            <div style="display:flex;justify-content:space-between;margin-top:6px;font-size:9px;color:var(--text4)"><span>1 Mar</span><span>15 Mar</span><span>Hari ini</span></div>
+            <div style="margin-top:8px;font-size:11px;color:var(--text3)">Min: <b style="color:var(--g2)">Rp 12.500</b> · Maks: <b style="color:var(--red)">Rp 15.000</b> · Rata-rata: <b>Rp 14.000</b></div>
+          </div>
+        </div>
+      </div><!-- /page-trends -->
+
+
+      <!-- ──────────────── ACCOUNT ──────────────── -->
+      <div class="page" id="page-account">
+        <div class="pg-head">
+          <div class="pg-title">Account</div>
+          <div class="pg-sub">Kelola profil dan preferensi kamu</div>
+        </div>
+
+        <div class="grid2" style="grid-template-columns:1fr 1.4fr">
+          <div class="col">
+            <div class="card">
+              <div class="card-head"><span class="card-title">Profil Saya</span></div>
+              <div class="card-body">
+                <div class="profile-card">
+                  <div class="profile-av" id="account-profile-initials">IB</div>
+                  <div>
+                    <div id="account-profile-name" style="font-size:16px;font-weight:700;color:var(--text)">Ibu Budi</div>
+                    <div id="account-profile-location" style="font-size:12px;color:var(--text3);margin-top:2px">📍 Jakarta Selatan</div>
+                    <div style="margin-top:6px"><span class="tag tag-green">Member Aktif</span></div>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Nama Lengkap</label>
+                  <input id="account-name-input" class="form-input" value="Ibu Budi" type="text" />
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Email</label>
+                  <input id="account-email-input" class="form-input" value="ibubudi@gmail.com" type="email" />
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Lokasi</label>
+                  <input id="account-location-input" class="form-input" value="Jakarta Selatan" type="text" />
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Persona</label>
+                  <select class="form-input form-select">
+                    <option>Ibu Rumah Tangga</option>
+                    <option>Anak Kos</option>
+                    <option>Wiraswasta</option>
+                  </select>
+                </div>
+                <button type="button" class="btn btn-g save-profile-btn" style="width:100%;justify-content:center">Simpan Perubahan</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="col">
+            <div class="card">
+              <div class="card-head"><span class="card-title">Ringkasan Aktivitas</span></div>
+              <div class="card-body">
+                <div class="stats" style="grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
+                  <div class="stat"><div class="stat-label">Bergabung Sejak</div><div class="stat-val" style="font-size:14px">Jan 2025</div></div>
+                  <div class="stat"><div class="stat-label">Total Hemat</div><div class="stat-val" style="font-size:14px;color:var(--g2)">Rp 1,2jt</div></div>
+                  <div class="stat"><div class="stat-label">Group Buy Diikuti</div><div class="stat-val" style="font-size:14px">8</div></div>
+                  <div class="stat"><div class="stat-label">Prediksi Diikuti</div><div class="stat-val" style="font-size:14px">24</div></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-head"><span class="card-title">Notifikasi</span></div>
+              <div class="card-body">
+                <div class="notif-row">
+                  <div>
+                    <div class="notif-row-label">Peringatan kadaluarsa</div>
+                    <div class="notif-row-sub">Notif H-2 sebelum kadaluarsa</div>
+                  </div>
+                  <div class="toggle-wrap on"><div class="toggle-knob"></div></div>
+                </div>
+                <div class="notif-row">
+                  <div>
+                    <div class="notif-row-label">Prediksi harga turun</div>
+                    <div class="notif-row-sub">Notif saat ada penurunan &gt;10%</div>
+                  </div>
+                  <div class="toggle-wrap on"><div class="toggle-knob"></div></div>
+                </div>
+                <div class="notif-row">
+                  <div>
+                    <div class="notif-row-label">Update grup beli bareng</div>
+                    <div class="notif-row-sub">Notif saat ada peserta baru</div>
+                  </div>
+                  <div class="toggle-wrap off"><div class="toggle-knob"></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div><!-- /page-account -->
+
+    </div><!-- /content -->
+  </div><!-- /main -->
+</div><!-- /shell -->
+
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>

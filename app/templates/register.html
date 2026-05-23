@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Registrasi WAREG</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+</head>
+<body>
+  <div class="auth-shell">
+    <div class="auth-card">
+      <div class="auth-brand">WAREG • Daftar Baru</div>
+      <h1 class="auth-title">Buat Akun</h1>
+      <p class="auth-copy">Isi data akun untuk mulai menyimpan komoditas dan melihat prediksi harga secara aman.</p>
+
+      <form id="register-form">
+        <input id="register-name" type="text" class="auth-input" placeholder="Nama Lengkap" required />
+        <input id="register-email" type="email" class="auth-input" placeholder="Email" required />
+        <input id="register-password" type="password" class="auth-input" placeholder="Password" required />
+        <button type="submit" class="auth-btn">Daftar</button>
+      </form>
+
+      <div class="error-msg" id="register-error"></div>
+      <div class="auth-footer">Sudah punya akun? <a href="/login" class="auth-link">Masuk di sini</a></div>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const token = localStorage.getItem('wareg_token');
+      if (token) {
+        window.location.href = '/';
+        return;
+      }
+
+      const form = document.getElementById('register-form');
+      const errorBox = document.getElementById('register-error');
+
+      form.addEventListener('submit', function (event) {
+        event.preventDefault();
+        errorBox.textContent = '';
+
+        const full_name = document.getElementById('register-name').value.trim();
+        const email = document.getElementById('register-email').value.trim();
+        const password = document.getElementById('register-password').value;
+
+        fetch('/api/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ full_name, email, password, location_id: 1 }),
+        })
+          .then(async response => {
+            const data = await response.json();
+            if (!response.ok) {
+              throw new Error(data.error || 'Registrasi gagal. Coba lagi.');
+            }
+            return data;
+          })
+          .then(() => {
+            window.location.href = '/login';
+          })
+          .catch(err => {
+            errorBox.textContent = err.message;
+          });
+      });
+    });
+  </script>
+</body>
+</html>
