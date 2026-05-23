@@ -857,85 +857,46 @@
         </div>
 
         <div class="stats" style="grid-template-columns:repeat(3,1fr)">
-          <div class="stat"><div class="stat-label">Grup Aktif</div><div class="stat-val">3</div><div class="stat-change up">di area kamu</div></div>
-          <div class="stat"><div class="stat-label">Siap Checkout</div><div class="stat-val" style="color:var(--g2)">1</div><div class="stat-change up">Minyak Goreng 5L</div></div>
-          <div class="stat"><div class="stat-label">Total Hemat</div><div class="stat-val">Rp 90k</div><div class="stat-change up">jika semua join</div></div>
+          <div class="stat"><div class="stat-label">Grup Aktif</div><div class="stat-val" id="gb-active-count">0</div><div class="stat-change up">di area kamu</div></div>
+          <div class="stat"><div class="stat-label">Siap Checkout</div><div class="stat-val" id="gb-ready-count" style="color:var(--g2)">0</div><div class="stat-change up">group ready</div></div>
+          <div class="stat"><div class="stat-label">Total Hemat</div><div class="stat-val" id="gb-total-savings">Rp 0</div><div class="stat-change up">estimasi</div></div>
         </div>
 
-        <div class="grid2">
-          <div class="col">
-            <div class="card">
-              <div class="card-head">
-                <span class="card-title">Beras Premium 25kg</span>
-                <span class="tag tag-amber">2 hari lagi</span>
-              </div>
-              <div class="card-body">
-                <div style="display:flex;justify-content:space-between;margin-bottom:10px">
-                  <div>
-                    <div style="font-size:18px;font-weight:700;color:var(--g2)">Rp 275.000<span style="font-size:12px;color:var(--text3);font-weight:400">/orang</span></div>
-                    <div style="font-size:11px;color:var(--g3);font-weight:600">Hemat Rp 50.000</div>
-                  </div>
-                  <span class="tag tag-amber">7/10 peserta</span>
-                </div>
-                <div class="gb-prog" style="height:7px;margin-bottom:8px"><div class="gb-fill" style="width:70%"></div></div>
-                <div class="gb-avs" style="margin-bottom:12px">
-                  <div class="av-sm" style="background:#D8F3DC;color:var(--g2)">IB</div>
-                  <div class="av-sm" style="background:#BFDBFE;color:var(--blu)">AS</div>
-                  <div class="av-sm" style="background:#FDE8AA;color:var(--amb)">DR</div>
-                  <div class="av-sm" style="background:var(--red-p);color:var(--red)">SM</div>
-                  <div class="av-sm" style="background:var(--bdr);color:var(--text3)">+3</div>
-                </div>
-                <button class="btn btn-out gb-join-btn" style="width:100%;justify-content:center">Join Group</button>
-              </div>
-            </div>
-            <div class="card">
-              <div class="card-head">
-                <span class="card-title">Telur 1 Tray (30pcs)</span>
-                <span class="tag tag-blue">5 hari lagi</span>
-              </div>
-              <div class="card-body">
-                <div style="display:flex;justify-content:space-between;margin-bottom:10px">
-                  <div>
-                    <div style="font-size:18px;font-weight:700;color:var(--g2)">Rp 45.000<span style="font-size:12px;color:var(--text3);font-weight:400">/orang</span></div>
-                    <div style="font-size:11px;color:var(--g3);font-weight:600">Hemat Rp 15.000</div>
-                  </div>
-                  <span class="tag tag-blue">4/12 peserta</span>
-                </div>
-                <div class="gb-prog" style="height:7px;margin-bottom:8px"><div class="gb-fill" style="width:33%"></div></div>
-                <div class="gb-avs" style="margin-bottom:12px">
-                  <div class="av-sm" style="background:#D8F3DC;color:var(--g2)">IB</div>
-                  <div class="av-sm" style="background:#BFDBFE;color:var(--blu)">AS</div>
-                  <div class="av-sm" style="background:var(--bdr);color:var(--text3)">+2</div>
-                </div>
-                <button class="btn btn-out gb-join-btn" style="width:100%;justify-content:center">Join Group</button>
-              </div>
-            </div>
+        <div class="card">
+          <div class="card-head">
+            <span class="card-title">Buat Grup Beli Bareng</span>
+            <span class="tag tag-blue">Input untuk pengguna</span>
           </div>
-          <div class="col">
-            <div class="card" style="border-color:var(--g3)">
-              <div class="card-head" style="background:var(--g5)">
-                <span class="card-title">Minyak Goreng 5L</span>
-                <span class="tag tag-green">✓ Ready!</span>
+          <div class="card-body">
+            <form id="form-groupbuy-create">
+              <div class="form-group">
+                <label class="form-label">Judul Grup</label>
+                <input id="gb-input-title" class="form-input" type="text" placeholder="Contoh: Beras Premium 25kg" required />
               </div>
-              <div class="card-body">
-                <div style="display:flex;justify-content:space-between;margin-bottom:10px">
-                  <div>
-                    <div style="font-size:18px;font-weight:700;color:var(--g2)">Rp 85.000<span style="font-size:12px;color:var(--text3);font-weight:400">/orang</span></div>
-                    <div style="font-size:11px;color:var(--g3);font-weight:600">Hemat Rp 25.000</div>
-                  </div>
-                  <span class="tag tag-green">8/8 penuh!</span>
-                </div>
-                <div class="gb-prog" style="height:7px;margin-bottom:8px"><div class="gb-fill" style="width:100%"></div></div>
-                <div class="gb-avs" style="margin-bottom:12px">
-                  <div class="av-sm" style="background:#D8F3DC;color:var(--g2)">IB</div>
-                  <div class="av-sm" style="background:#BFDBFE;color:var(--blu)">AS</div>
-                  <div class="av-sm" style="background:#FDE8AA;color:var(--amb)">DR</div>
-                  <div class="av-sm" style="background:var(--bdr);color:var(--text3)">+5</div>
-                </div>
-                <button class="btn btn-g" style="width:100%;justify-content:center">🛒 Checkout Sekarang</button>
+              <div class="form-group">
+                <label class="form-label">Komoditas</label>
+                <input id="gb-input-commodity" class="form-input" type="text" placeholder="Contoh: Beras Premium" required />
               </div>
-            </div>
+              <div class="form-group">
+                <label class="form-label">Harga per Orang (Rp)</label>
+                <input id="gb-input-price" class="form-input" type="number" min="0" placeholder="Contoh: 275000" required />
+              </div>
+              <div class="form-group">
+                <label class="form-label">Jumlah Peserta Target</label>
+                <input id="gb-input-slots" class="form-input" type="number" min="2" placeholder="Contoh: 10" required />
+              </div>
+              <div class="form-group">
+                <label class="form-label">Berakhir pada</label>
+                <input id="gb-input-ends-at" class="form-input" type="date" />
+              </div>
+              <button type="submit" class="btn btn-g" style="width:100%;justify-content:center;margin-top:8px">Buat Grup Baru</button>
+            </form>
           </div>
+        </div>
+
+        <div class="grid2" id="groupbuy-grid">
+          <div class="col"></div>
+          <div class="col"></div>
         </div>
       </div><!-- /page-groupbuy -->
 
