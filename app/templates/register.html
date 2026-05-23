@@ -18,6 +18,13 @@
         <input id="register-name" type="text" class="auth-input" placeholder="Nama Lengkap" required />
         <input id="register-email" type="email" class="auth-input" placeholder="Email" required />
         <input id="register-password" type="password" class="auth-input" placeholder="Password" required />
+        <input id="register-location" type="text" class="auth-input" placeholder="Lokasi Saat Ini" required />
+        <select id="register-persona" class="auth-input" required>
+          <option value="ibu rumah tangga">Ibu Rumah Tangga</option>
+          <option value="wirausaha">Wirausaha</option>
+          <option value="mahasiswa">Mahasiswa</option>
+          <option value="other">Other</option>
+        </select>
         <button type="submit" class="auth-btn">Daftar</button>
       </form>
 
@@ -44,11 +51,13 @@
         const full_name = document.getElementById('register-name').value.trim();
         const email = document.getElementById('register-email').value.trim();
         const password = document.getElementById('register-password').value;
+        const location_name = document.getElementById('register-location').value.trim();
+        const persona = document.getElementById('register-persona').value;
 
         fetch('/api/auth/register', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ full_name, email, password, location_id: 1 }),
+          body: JSON.stringify({ full_name, email, password, location_name, persona, location_id: 1 }),
         })
           .then(async response => {
             const data = await response.json();

@@ -13,6 +13,7 @@ class User(db.Model):
     phone_number = db.Column(db.String(20), nullable=True)
     location_name = db.Column(db.String(100), nullable=True)
     location_id = db.Column(db.Integer, nullable=False)
+    persona = db.Column(db.String(50), nullable=True)
     monthly_budget = db.Column(db.Numeric(12, 2), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     is_active = db.Column(db.Boolean, default=True)

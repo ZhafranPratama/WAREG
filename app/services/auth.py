@@ -36,12 +36,16 @@ def register():
     if User.query.filter_by(email=data['email']).first():
         return jsonify({"error": "Email sudah terdaftar"}), 409
     hashed_password = generate_password_hash(data['password'])
+    persona_value = data.get('persona', 'other')
+    if persona_value not in ['ibu rumah tangga', 'wirausaha', 'mahasiswa', 'other']:
+        persona_value = 'other'
     new_user = User(
         email=data['email'],
         password_hash=hashed_password,
         full_name=data.get('full_name', 'User WAREG'),
         location_id=data.get('location_id', 1),
-        location_name=data.get('location_name', 'Jakarta Selatan')
+        location_name=data.get('location_name', 'Jakarta Selatan'),
+        persona=persona_value,
     )
     db.session.add(new_user)
     db.session.commit()
@@ -68,6 +72,7 @@ def current_user_profile(current_user):
         'full_name': current_user.full_name,
         'location_id': current_user.location_id,
         'location_name': getattr(current_user, 'location_name', None) or 'Jakarta Selatan',
+        'persona': getattr(current_user, 'persona', None) or 'other',
         'created_at': current_user.created_at.isoformat(),
     }), 200
 
@@ -85,6 +90,12 @@ def update_user_profile(current_user):
 
     if data.get('location_name') is not None:
         current_user.location_name = data['location_name'].strip() or None
+
+    if data.get('persona') is not None:
+        persona_value = data['persona'].strip().lower()
+        if persona_value not in ['ibu rumah tangga', 'wirausaha', 'mahasiswa', 'other']:
+            persona_value = 'other'
+        current_user.persona = persona_value
 
     db.session.commit()
     return jsonify({"status": "success", "message": "Profil diperbarui"}), 200
