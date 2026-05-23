@@ -32,6 +32,7 @@ document.addEventListener('DOMContentLoaded', () => {
   loadPriceForecast();
   loadMarketComparison();
   handlePantryForm();
+  handleImportExcel();
   loadPantryItems();
 });
 
@@ -163,13 +164,23 @@ function loadDashboardStats() {
       } else if (hargaBerasEl) {
         hargaBerasEl.innerHTML = `Rp 0<span class="stat-unit">/kg</span>`;
       }
+    })
+    .catch(err => console.error("Gagal memuat statistik harga beras:", err));
 
+  fetch('/api/pantry', {
+      headers: {
+        'Content-Type': 'application/json',
+        ...getAuthHeaders(),
+      },
+    })
+    .then(res => res.ok ? res.json() : { data: [] })
+    .then(result => {
       const totalPantryEl = document.getElementById('dash-total-pantry');
       if (totalPantryEl) {
-        totalPantryEl.innerHTML = `${data.length}<span class="stat-unit"> item</span>`;
+        totalPantryEl.innerHTML = `${result.data.length}<span class="stat-unit"> item</span>`;
       }
     })
-    .catch(err => console.error("Gagal memuat statistik dashboard:", err));
+    .catch(err => console.error("Gagal memuat jumlah pantry:", err));
 }
 
 /* ── 2. PRICE TRENDS: Sinkronisasi Grafik Batang Sesuai CSS Figma ── */
@@ -219,39 +230,59 @@ function loadPriceTrends() {
 
 /* ── 3. DIGITAL KITCHEN: Sinkronisasi Grid Card Sesuai CSS Figma ── */
 function loadPantryItems() {
-  fetch('/api/commodity', {
+  fetch('/api/pantry', {
       headers: {
         'Content-Type': 'application/json',
         ...getAuthHeaders(),
       },
-    }) 
-    .then(res => res.ok ? res.json() : [])
-    .then(data => {
+    })
+    .then(res => res.ok ? res.json() : { data: [] })
+    .then(result => {
+      const data = result.data || [];
       const container = document.getElementById('pantry-items-container');
+      const detailPanel = document.getElementById('pantry-item-detail');
       if (!container) return;
 
-      container.innerHTML = ''; 
+      container.innerHTML = '';
+      if (detailPanel) {
+        detailPanel.style.display = 'none';
+      }
 
       if (data.length === 0) {
-        container.innerHTML = '<p style="padding: 20px; color: var(--text3); grid-column: 1/-1;">Dapur kosong. Masukkan komoditas melalui formulir input.</p>';
+        container.innerHTML = '<p style="padding: 20px; color: var(--text3); grid-column: 1/-1;">Dapur kosong. Masukkan bahan baru untuk mulai memantau stok.</p>';
         return;
       }
 
       data.forEach(item => {
-        // Menggunakan murni susunan class .pantry-card, .p-head, .p-title, .p-body, .p-info dari style.css asli kamu
+        const statusClass = item.status === 'expired' ? 'tag-red' : item.status === 'expires-today' ? 'tag-red' : item.status === 'soon' ? 'tag-amber' : item.status === 'warning' ? 'tag-amber' : 'tag-green';
+        const statusLabel = item.status_text || 'Status tidak tersedia';
         const itemHTML = `
-          <div class="pantry-card">
+          <div class="pantry-card pantry-card-clickable" data-item-id="${item.item_id}">
             <div class="p-head">
-              <span class="p-title">${item.commodity_name}</span>
-              <span class="badge badge-success">1 ${item.unit}</span>
+              <span class="p-title">${item.commodity}</span>
+              <span class="badge badge-success">${item.quantity} ${item.unit}</span>
             </div>
             <div class="p-body">
-              <div class="p-info">Pasar: <strong>${item.source}</strong></div>
-              <div class="p-info" style="margin-top: 4px;">Harga: <strong style="color: var(--g2);">Rp ${Number(item.price_value).toLocaleString('id-ID')}</strong></div>
+              <div class="p-info">Beli: <strong>${item.purchase_date}</strong></div>
+              <div class="p-info">Kadaluarsa: <strong>${item.expiry_date || '-'}</strong></div>
+            </div>
+            <div class="p-info" style="margin-top: 10px; display:flex; justify-content:space-between; align-items:center;">
+              <span class="tag ${statusClass}" style="padding: 4px 8px; font-size:12px;">${statusLabel}</span>
+              <span class="p-info" style="font-size:12px;color:var(--text3)">Klik untuk detail</span>
             </div>
           </div>
         `;
         container.insertAdjacentHTML('beforeend', itemHTML);
+      });
+
+      container.querySelectorAll('.pantry-card-clickable').forEach(card => {
+            card.addEventListener('click', () => {
+              const itemId = card.getAttribute('data-item-id');
+              const item = data.find(i => String(i.item_id) === String(itemId));
+              if (item) {
+                showPantryItemDetails(item);
+              }
+            });
       });
     })
     .catch(err => console.error("Gagal memuat list dapur:", err));
@@ -358,24 +389,25 @@ function handlePantryForm() {
   if (!form) return;
 
   form.addEventListener('submit', function(e) {
-    e.preventDefault(); 
+    e.preventDefault();
 
-    const name = document.getElementById('input-comm-name').value;
-    const price = document.getElementById('input-comm-price').value;
-    const source = document.getElementById('input-comm-source').value;
+    const name = document.getElementById('input-comm-name').value.trim();
+    const quantity = document.getElementById('input-comm-quantity').value;
+    const unit = document.getElementById('input-comm-unit').value.trim();
+    const purchaseDate = document.getElementById('input-purchase-date').value;
+    const expiryDate = document.getElementById('input-expiry-date').value;
+    const purchasePrice = document.getElementById('input-purchase-price').value;
 
     const payload = {
       commodity_name: name,
-      category: "Bahan Pokok",
-      region_id: 1,
-      price_value: parseFloat(price),
-      unit: "kg",
-      price_type: "retail",
-      recorded_date: new Date().toISOString().split('T')[0], 
-      source: source
+      quantity: parseFloat(quantity),
+      unit: unit || 'pcs',
+      purchase_date: purchaseDate,
+      expiry_date: expiryDate || null,
+      purchase_price: purchasePrice ? parseFloat(purchasePrice) : null,
     };
 
-    fetch('/api/commodity', {
+    fetch('/api/pantry', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -383,20 +415,96 @@ function handlePantryForm() {
       },
       body: JSON.stringify(payload)
     })
-    .then(res => {
-      if (!res.ok) throw new Error("Gagal menyimpan ke basis data.");
-      return res.json();
+    .then(async res => {
+      const result = await res.json();
+      if (!res.ok) throw new Error(result.error || 'Gagal menyimpan ke pantry.');
+      return result;
     })
     .then(result => {
-      alert("Sukses! Data komoditas pangan berhasil disimpan ke file wareg.db");
-      form.reset(); 
-      
-      // Sinkronisasi ulang data di layar secara instan
+      alert("Sukses! Bahan dapur berhasil ditambahkan.");
+      form.reset();
+      loadDashboardStats();
+      loadPantryItems();
+    })
+    .catch(err => alert("Gagal memproses penyimpanan data: " + err.message));
+  });
+}
+
+function showPantryItemDetails(item) {
+  const detailPanel = document.getElementById('pantry-item-detail');
+  const detailContent = document.getElementById('pantry-item-detail-content');
+  if (!detailPanel || !detailContent) return;
+
+  const expiryText = item.expiry_date || 'Belum diisi';
+  const priceText = item.purchase_price ? `Rp ${Number(item.purchase_price).toLocaleString('id-ID')}` : 'Tidak tersedia';
+  const statusClass = item.status === 'expired' || item.status === 'expires-today' ? 'tag-red' : item.status === 'soon' || item.status === 'warning' ? 'tag-amber' : 'tag-green';
+
+  detailContent.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+      <div>
+        <div style="font-size:18px;font-weight:700;color:var(--text)">${item.commodity}</div>
+        <div style="font-size:13px;color:var(--text3)">Jumlah: ${item.quantity} ${item.unit}</div>
+      </div>
+      <span class="tag ${statusClass}">${item.status_text}</span>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+      <div style="background:rgba(255,255,255,0.04);padding:12px;border-radius:14px">
+        <div style="font-size:12px;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">Dibeli pada</div>
+        <div style="font-size:14px;font-weight:700">${item.purchase_date}</div>
+      </div>
+      <div style="background:rgba(255,255,255,0.04);padding:12px;border-radius:14px">
+        <div style="font-size:12px;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">Kadaluarsa</div>
+        <div style="font-size:14px;font-weight:700">${expiryText}</div>
+      </div>
+    </div>
+    <div style="margin-top:14px;padding:12px;background:rgba(255,255,255,0.04);border-radius:14px">
+      <div style="font-size:12px;color:var(--text4);margin-bottom:6px">Harga beli</div>
+      <div style="font-size:14px;font-weight:700">${priceText}</div>
+    </div>
+  `;
+  detailPanel.style.display = 'block';
+}
+
+function hidePantryItemDetails() {
+  const detailPanel = document.getElementById('pantry-item-detail');
+  const detailContent = document.getElementById('pantry-item-detail-content');
+  if (!detailPanel) return;
+  detailPanel.style.display = 'none';
+  if (detailContent) detailContent.innerHTML = '';
+}
+
+function handleImportExcel() {
+  const button = document.getElementById('btn-import-excel');
+  if (!button) return;
+
+  button.addEventListener('click', async () => {
+    button.disabled = true;
+    const originalText = button.textContent;
+    button.textContent = 'Mengimpor data...';
+
+    try {
+      const response = await fetch('/api/commodity/import-excel', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders(),
+        },
+      });
+      const result = await response.json();
+      if (!response.ok) {
+        throw new Error(result.error || 'Import Excel gagal');
+      }
+
+      alert(`Sukses mengimpor ${result.imported} baris data komoditas dari Excel.`);
       loadDashboardStats();
       loadPriceTrends();
       loadPantryItems();
-    })
-    .catch(err => alert("Gagal memproses penyimpanan data: " + err));
+    } catch (err) {
+      alert('Gagal mengimpor data Excel: ' + err.message);
+    } finally {
+      button.disabled = false;
+      button.textContent = originalText;
+    }
   });
 }
 
@@ -427,11 +535,20 @@ function initGroupBuyButtons() {
 }
 
 function initAddKitchen() {
-  const btn = document.querySelector('.add-kitchen-btn');
-  if (!btn) return;
-  btn.addEventListener('click', () => {
-    nav('pantry'); 
+  document.querySelectorAll('.add-kitchen-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      nav('pantry', btn);
+    });
   });
+
+  // Close button for pantry detail
+  const closeBtn = document.getElementById('pantry-item-detail-close');
+  if (closeBtn) {
+    closeBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      hidePantryItemDetails();
+    });
+  }
 }
 
 /* ── Klik Bell Notifikasi ── */
