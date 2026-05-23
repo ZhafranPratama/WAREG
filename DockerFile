@@ -1,0 +1,20 @@
+# Gunakan base image Python yang ringan
+FROM python:3.9-slim
+
+# Atur direktori kerja di dalam container
+WORKDIR /code
+
+# Copy file requirements terlebih dahulu agar efisien saat build
+COPY ./requirements.txt /code/requirements.txt
+
+# Install dependencies aplikasi
+RUN pip install --no-cache-dir --upgrade -r /code/requirements.txt
+
+# Copy seluruh kode proyek ke dalam container
+COPY . .
+
+# Hugging Face Spaces mewajibkan aplikasi berjalan di port 7860
+EXPOSE 7860
+
+# Jalankan aplikasi Flask lewat run.py
+CMD ["python", "run.py"]
