@@ -1,5 +1,6 @@
 from flask import Flask
 from flask_cors import CORS
+from sqlalchemy import text
 from app.services.models import db, User, CommodityPrice, PantryItem
 from app.services.auth import auth_bp, token_required
 from app.services.dataset import seed_commodity_prices
@@ -27,11 +28,18 @@ def create_app():
     app.register_blueprint(pantry_bp)
     app.register_blueprint(predictor_bp)
     
-    # Create tables
+# Create tables and ensure the persona column exists for existing SQLite schemas
     with app.app_context():
         db.create_all()
         seed_commodity_prices()
 
+        if app.config['SQLALCHEMY_DATABASE_URI'].startswith('sqlite'):
+            with db.engine.connect() as conn:
+                result = conn.execute(text("PRAGMA table_info(users)"))
+                columns = [row[1] for row in result.fetchall()]
+                if 'persona' not in columns:
+                    conn.execute(text("ALTER TABLE users ADD COLUMN persona VARCHAR(50)"))
+    
     return app
 
 

@@ -86,6 +86,7 @@ function loadCurrentUser() {
       const accountNameInput = document.getElementById('account-name-input');
       const accountEmailInput = document.getElementById('account-email-input');
       const accountLocationInput = document.getElementById('account-location-input');
+      const accountPersonaSelect = document.getElementById('account-persona-select');
 
       const initials = formatInitials(user.full_name);
       if (initialsEl) initialsEl.textContent = initials;
@@ -99,6 +100,7 @@ function loadCurrentUser() {
       if (accountNameInput) accountNameInput.value = user.full_name;
       if (accountEmailInput) accountEmailInput.value = user.email;
       if (accountLocationInput) accountLocationInput.value = user.location_name || 'Jakarta Selatan';
+      if (accountPersonaSelect) accountPersonaSelect.value = user.persona || 'other';
     })
     .catch(() => {
       localStorage.removeItem('wareg_token');
@@ -112,8 +114,9 @@ async function saveProfile() {
   const accountNameInput = document.getElementById('account-name-input');
   const accountEmailInput = document.getElementById('account-email-input');
   const accountLocationInput = document.getElementById('account-location-input');
+  const accountPersonaSelect = document.getElementById('account-persona-select');
 
-  if (!accountNameInput || !accountEmailInput || !accountLocationInput) {
+  if (!accountNameInput || !accountEmailInput || !accountLocationInput || !accountPersonaSelect) {
     return false;
   }
 
@@ -121,6 +124,7 @@ async function saveProfile() {
     full_name: accountNameInput.value.trim(),
     email: accountEmailInput.value.trim(),
     location_name: accountLocationInput.value.trim(),
+    persona: accountPersonaSelect.value,
   };
 
   const response = await fetch('/api/auth/me', {
@@ -667,6 +671,46 @@ async function loadPriceForecast() {
       chartBody.innerHTML = '<p style="padding:16px;color:var(--text3);margin:0">Grafik prediksi tidak tersedia saat ini.</p>';
     }
   }
+}
+
+function loadMarketComparison() {
+  fetch('/api/predictor/compare?commodity=Chili%20(Red)&region_id=1')
+    .then(res => res.ok ? res.json() : Promise.reject('Tidak dapat mengambil rekomendasi pasar'))
+    .then(result => {
+      const data = result.data || {};
+      const marketBody = document.getElementById('market-compare-body');
+      if (!marketBody) return;
+
+      const items = data.recommendations || [];
+      if (items.length === 0) {
+        marketBody.innerHTML = '<p style="padding:16px;color:var(--text3);margin:0">Rekomendasi pasar tidak tersedia saat ini.</p>';
+        return;
+      }
+
+      let html = '<div style="display:grid;gap:12px">';
+      items.slice(0, 4).forEach(item => {
+        const price = item.predicted_price ? Number(item.predicted_price).toLocaleString('id-ID') : '--';
+        const distance = item.distance ? item.distance.toFixed(1) : '--';
+        html += `
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px;background:rgba(255,255,255,0.04);border-radius:14px">
+            <div>
+              <div style="font-size:14px;font-weight:700;color:var(--text)">${item.market}</div>
+              <div style="font-size:12px;color:var(--text3)">Jarak ${distance} km</div>
+            </div>
+            <div style="font-size:14px;font-weight:700;color:var(--g2)">Rp ${price}</div>
+          </div>`;
+      });
+      html += '</div>';
+      html += `<div style="margin-top:14px;font-size:13px;color:var(--text3)">${data.recommendation || 'Rekomendasi dihitung oleh model AI.'}</div>`;
+      marketBody.innerHTML = html;
+    })
+    .catch(err => {
+      console.error('Gagal memuat rekomendasi pasar:', err);
+      const marketBody = document.getElementById('market-compare-body');
+      if (marketBody) {
+        marketBody.innerHTML = '<p style="padding:16px;color:var(--text3);margin:0">Rekomendasi pasar tidak tersedia.</p>';
+      }
+    });
 }
 
 function loadMarketComparison() {
