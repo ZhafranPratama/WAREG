@@ -2,6 +2,7 @@ from flask import Flask
 from flask_cors import CORS
 from app.services.models import db, User, CommodityPrice, PantryItem
 from app.services.auth import auth_bp, token_required
+from app.services.dataset import seed_commodity_prices
 from app.services.pantry import pantry_bp
 from app.services.predictor import predictor_bp
 from app.routes.main import main_bp
@@ -29,7 +30,8 @@ def create_app():
     # Create tables
     with app.app_context():
         db.create_all()
-    
+        seed_commodity_prices()
+
     return app
 
 

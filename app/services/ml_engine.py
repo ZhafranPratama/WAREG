@@ -20,7 +20,7 @@ class PriceAnalyticsEngine:
         self.xgb_encoders = None
         self.lstm_scalers = None
         self.lstm_models = {}
-        self.base_dir = Path(__file__).resolve().parent.parent
+        self.base_dir = Path(__file__).resolve().parents[2]
         self.xgb_model_path = self.base_dir / 'wareg_xgboost.json'
         self.xgb_encoders_path = self.base_dir / 'wareg_xgboost_encoders.pkl'
         self.lstm_scaler_path = self.base_dir / 'wareg_lstm_scalers.pkl'

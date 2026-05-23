@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>WAREG – Wise Asset for Real Economy &amp; Grocery</title>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=20260523-price-predictor" />
 </head>
 <body>
 <div class="shell">
@@ -555,6 +555,18 @@
           </div>
         </div>
 
+        <div class="card" id="predictor-chart-card" style="margin-top: 12px;">
+          <div class="card-head">
+            <span class="card-title">📈 Grafik Prediksi AI</span>
+            <span class="tag tag-blue">Per komoditas</span>
+          </div>
+          <div class="card-body" id="predictor-chart-body">
+            <p style="padding:16px;color:var(--text3);margin:0">
+              Memuat grafik prediksi per komoditas...
+            </p>
+          </div>
+        </div>
+
         <div class="grid3">
           <div class="card">
             <div class="card-head">
@@ -624,24 +636,6 @@
           </div>
         </div>
 
-        <div class="card">
-          <div class="card-head">
-            <span class="card-title">Semua Bahan Pokok</span>
-            <span class="tag tag-blue">Data WFP</span>
-          </div>
-          <div class="card-body" style="padding:0">
-            <table>
-              <thead>
-                <tr><th>Komoditas</th><th>Harga Hari Ini</th><th>Prediksi</th><th>Perubahan</th><th>Rekomendasi</th></tr>
-              </thead>
-              <tbody id="predictor-table-body">
-                <tr><td colspan="5" style="padding:16px;color:var(--text3);text-align:center">
-                  Memuat data prediksi dari API...
-                </td></tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
       </div><!-- /page-predictor -->
 
 
@@ -1002,57 +996,19 @@
           </div>
         </div>
 
-        <!-- Chart statis sebagai referensi visual tambahan -->
-        <div class="grid2" style="grid-template-columns:1fr 1fr">
-          <div class="trend-area">
-            <div class="card-title" style="margin-bottom:8px">🌶️ Cabai Merah (Rp/kg)</div>
-            <div class="trend-labels"><div class="tl-item"><div class="tl-dot" style="background:var(--g3)"></div>Harga Aktual</div></div>
-            <div class="line-chart" style="height:80px">
-              <div class="lc-bar" style="height:90%"></div><div class="lc-bar" style="height:95%"></div>
-              <div class="lc-bar" style="height:100%"></div><div class="lc-bar" style="height:88%"></div>
-              <div class="lc-bar" style="height:82%"></div><div class="lc-bar" style="height:75%"></div>
-              <div class="lc-bar" style="height:70%"></div><div class="lc-bar" style="height:78%"></div>
-              <div class="lc-bar" style="height:85%"></div><div class="lc-bar" style="height:80%"></div>
-            </div>
-            <div style="display:flex;justify-content:space-between;margin-top:6px;font-size:9px;color:var(--text4)"><span>1 Mar</span><span>15 Mar</span><span>Hari ini</span></div>
-            <div style="margin-top:8px;font-size:11px;color:var(--text3)">Min: <b style="color:var(--g2)">Rp 67.000</b> · Maks: <b style="color:var(--red)">Rp 95.000</b> · Rata-rata: <b>Rp 82.000</b></div>
+        <div class="card" style="margin-top: 12px;">
+          <div class="card-head">
+            <span class="card-title">📈 Grafik Komoditas</span>
+            <span class="tag tag-blue">Dinamis dari data</span>
           </div>
-          <div class="trend-area">
-            <div class="card-title" style="margin-bottom:8px">🧄 Bawang Putih (Rp/kg)</div>
-            <div class="trend-labels"><div class="tl-item"><div class="tl-dot" style="background:var(--blu)"></div>Harga Aktual</div></div>
-            <div class="line-chart" style="height:80px">
-              <div class="lc-bar" style="height:70%;background:var(--blu);opacity:0.6"></div><div class="lc-bar" style="height:75%;background:var(--blu);opacity:0.6"></div>
-              <div class="lc-bar" style="height:80%;background:var(--blu);opacity:0.6"></div><div class="lc-bar" style="height:85%;background:var(--blu);opacity:0.6"></div>
-              <div class="lc-bar" style="height:90%;background:var(--blu);opacity:0.6"></div><div class="lc-bar" style="height:100%;background:var(--blu);opacity:0.6"></div>
-              <div class="lc-bar" style="height:95%;background:var(--blu);opacity:0.6"></div><div class="lc-bar" style="height:88%;background:var(--blu);opacity:0.6"></div>
-              <div class="lc-bar" style="height:92%;background:var(--blu);opacity:0.6"></div><div class="lc-bar" style="height:85%;background:var(--blu);opacity:0.6"></div>
+          <div class="card-body">
+            <div class="form-group" style="margin-bottom: 14px;">
+              <label class="form-label">Sorot komoditas</label>
+              <select id="trend-chart-select" class="form-input"></select>
             </div>
-            <div style="display:flex;justify-content:space-between;margin-top:6px;font-size:9px;color:var(--text4)"><span>1 Mar</span><span>15 Mar</span><span>Hari ini</span></div>
-            <div style="margin-top:8px;font-size:11px;color:var(--text3)">Min: <b style="color:var(--g2)">Rp 36.000</b> · Maks: <b style="color:var(--red)">Rp 48.000</b> · Rata-rata: <b>Rp 42.000</b></div>
-          </div>
-          <div class="trend-area">
-            <div class="card-title" style="margin-bottom:8px">🍅 Tomat (Rp/kg)</div>
-            <div class="line-chart" style="height:80px">
-              <div class="lc-bar" style="height:40%;background:var(--red);opacity:0.5"></div><div class="lc-bar" style="height:45%;background:var(--red);opacity:0.5"></div>
-              <div class="lc-bar" style="height:50%;background:var(--red);opacity:0.5"></div><div class="lc-bar" style="height:55%;background:var(--red);opacity:0.5"></div>
-              <div class="lc-bar" style="height:60%;background:var(--red);opacity:0.5"></div><div class="lc-bar" style="height:70%;background:var(--red);opacity:0.5"></div>
-              <div class="lc-bar" style="height:80%;background:var(--red);opacity:0.5"></div><div class="lc-bar" style="height:90%;background:var(--red);opacity:0.6"></div>
-              <div class="lc-bar" style="height:95%;background:var(--red);opacity:0.7"></div><div class="lc-bar" style="height:100%;background:var(--red);opacity:0.8"></div>
+            <div id="trend-chart-container">
+              <p style="padding:16px;color:var(--text3);margin:0">Memuat grafik trend...</p>
             </div>
-            <div style="display:flex;justify-content:space-between;margin-top:6px;font-size:9px;color:var(--text4)"><span>1 Mar</span><span>15 Mar</span><span>Hari ini</span></div>
-            <div style="margin-top:8px;font-size:11px;color:var(--text3)">Min: <b style="color:var(--g2)">Rp 8.000</b> · Maks: <b style="color:var(--red)">Rp 16.000</b> · Rata-rata: <b>Rp 11.500</b></div>
-          </div>
-          <div class="trend-area">
-            <div class="card-title" style="margin-bottom:8px">🌾 Beras (Rp/kg)</div>
-            <div class="line-chart" style="height:80px">
-              <div class="lc-bar" style="height:92%;background:var(--amb);opacity:0.6"></div><div class="lc-bar" style="height:94%;background:var(--amb);opacity:0.6"></div>
-              <div class="lc-bar" style="height:90%;background:var(--amb);opacity:0.6"></div><div class="lc-bar" style="height:95%;background:var(--amb);opacity:0.6"></div>
-              <div class="lc-bar" style="height:98%;background:var(--amb);opacity:0.6"></div><div class="lc-bar" style="height:100%;background:var(--amb);opacity:0.6"></div>
-              <div class="lc-bar" style="height:96%;background:var(--amb);opacity:0.6"></div><div class="lc-bar" style="height:93%;background:var(--amb);opacity:0.6"></div>
-              <div class="lc-bar" style="height:91%;background:var(--amb);opacity:0.6"></div><div class="lc-bar" style="height:94%;background:var(--amb);opacity:0.6"></div>
-            </div>
-            <div style="display:flex;justify-content:space-between;margin-top:6px;font-size:9px;color:var(--text4)"><span>1 Mar</span><span>15 Mar</span><span>Hari ini</span></div>
-            <div style="margin-top:8px;font-size:11px;color:var(--text3)">Min: <b style="color:var(--g2)">Rp 12.500</b> · Maks: <b style="color:var(--red)">Rp 15.000</b> · Rata-rata: <b>Rp 14.000</b></div>
           </div>
         </div>
       </div><!-- /page-trends -->
@@ -1150,6 +1106,6 @@
   </div><!-- /main -->
 </div><!-- /shell -->
 
-<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+<script src="{{ url_for('static', filename='js/app.js') }}?v=20260523-price-predictor"></script>
 </body>
 </html>
