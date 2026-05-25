@@ -736,42 +736,71 @@
               <div class="card-body">
                 <!--
                   ✦ DINAMIS: form ini di-handle oleh handlePantryForm() di app.js
-                  Submit akan POST ke /api/commodity dan refresh data secara otomatis
+                  Submit akan POST ke /api/pantry dan refresh data input bahan dapur
                 -->
                 <form id="form-add-commodity">
                   <div class="form-group">
-                    <label class="form-label">Nama Komoditas</label>
+                    <label class="form-label">Nama Bahan</label>
                     <input
                       id="input-comm-name"
                       class="form-input"
                       type="text"
-                      placeholder="cth: Beras, Cabai Merah, Telur..."
+                      placeholder="cth: Beras, Telur, Minyak Goreng..."
                       required
                     />
                   </div>
                   <div class="form-group">
-                    <label class="form-label">Harga (Rp/kg)</label>
+                    <label class="form-label">Jumlah</label>
                     <input
-                      id="input-comm-price"
+                      id="input-comm-quantity"
                       class="form-input"
                       type="number"
-                      placeholder="cth: 14000"
+                      placeholder="cth: 2"
                       min="0"
+                      step="0.01"
                       required
                     />
                   </div>
                   <div class="form-group">
-                    <label class="form-label">Sumber / Nama Pasar</label>
+                    <label class="form-label">Satuan</label>
                     <input
-                      id="input-comm-source"
+                      id="input-comm-unit"
                       class="form-input"
                       type="text"
-                      placeholder="cth: Pasar Minggu, Indomaret..."
+                      placeholder="cth: kg, butir, liter"
                       required
+                    />
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Tanggal Pembelian</label>
+                    <input
+                      id="input-purchase-date"
+                      class="form-input"
+                      type="date"
+                      required
+                    />
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Tanggal Kadaluarsa</label>
+                    <input
+                      id="input-expiry-date"
+                      class="form-input"
+                      type="date"
+                    />
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Harga Beli (opsional)</label>
+                    <input
+                      id="input-purchase-price"
+                      class="form-input"
+                      type="number"
+                      placeholder="cth: 45000"
+                      min="0"
+                      step="0.01"
                     />
                   </div>
                   <button type="submit" class="btn btn-g" style="width:100%;justify-content:center;margin-top:4px">
-                    💾 Simpan ke Database
+                    💾 Tambah Bahan Dapur
                   </button>
                 </form>
               </div>
@@ -782,64 +811,30 @@
           <div class="col">
             <div class="card">
               <div class="card-head">
-                <span class="card-title">📦 Data Komoditas Tersimpan</span>
+                <span class="card-title">📦 Daftar Bahan Dapur</span>
                 <span class="tag tag-blue">Live dari DB</span>
               </div>
               <div class="card-body">
                 <!--
-                  ✦ DINAMIS: diisi oleh loadPantryItems() via API /api/commodity
-                  Konten di sini akan di-replace otomatis dengan data dari wareg.db
+                  ✦ DINAMIS: diisi oleh loadPantryItems() via API /api/pantry
+                  Konten di sini akan di-replace otomatis dengan data bahan dapur kamu
                 -->
                 <div id="pantry-items-container" style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
                   <p style="padding:20px;color:var(--text3);grid-column:1/-1">
                     <span style="display:block;text-align:center;font-size:24px;margin-bottom:8px">⏳</span>
-                    Memuat data dari database...
+                    Memuat data bahan dapur...
                   </p>
+                </div>
+                <div id="pantry-item-detail" style="display:none;position:relative;margin-top:16px;padding:16px;border:1px solid rgba(255,255,255,0.08);border-radius:16px;background:rgba(255,255,255,0.03);color:var(--text);">
+                  <button id="pantry-item-detail-close" class="btn btn-out btn-sm" style="position:absolute;right:12px;top:12px;">Close</button>
+                  <div id="pantry-item-detail-content"></div>
                 </div>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- Tabel stok bahan (data statis sebagai referensi) -->
-        <div class="card">
-          <div class="card-head">
-            <span class="card-title">🍳 Stok Bahan Dapur</span>
-            <button class="btn btn-g btn-sm add-kitchen-btn">+ Tambah Bahan</button>
-          </div>
-          <div class="card-body" style="padding:0">
-            <table>
-              <thead><tr><th>Bahan</th><th>Jumlah</th><th>Sisa Stok</th><th>Kadaluarsa</th><th>Status</th></tr></thead>
-              <tbody>
-                <tr>
-                  <td><span style="font-size:16px">🌾</span> Beras</td><td>5 kg</td>
-                  <td><div style="display:flex;align-items:center;gap:8px"><div style="width:80px;height:5px;background:var(--bdr);border-radius:3px;overflow:hidden"><div style="width:65%;height:100%;background:var(--g3);border-radius:3px"></div></div><span style="font-size:11px;color:var(--g2);font-weight:600">65%</span></div></td>
-                  <td style="color:var(--g2);font-weight:500">120 hari lagi</td><td><span class="tag tag-green">Aman</span></td>
-                </tr>
-                <tr>
-                  <td><span style="font-size:16px">🥚</span> Telur</td><td>10 butir</td>
-                  <td><div style="display:flex;align-items:center;gap:8px"><div style="width:80px;height:5px;background:var(--bdr);border-radius:3px;overflow:hidden"><div style="width:35%;height:100%;background:#F59E0B;border-radius:3px"></div></div><span style="font-size:11px;color:var(--amb);font-weight:600">35%</span></div></td>
-                  <td style="color:var(--amb);font-weight:500">5 hari lagi</td><td><span class="tag tag-amber">Perhatian</span></td>
-                </tr>
-                <tr>
-                  <td><span style="font-size:16px">🧈</span> Mentega</td><td>200 g</td>
-                  <td><div style="display:flex;align-items:center;gap:8px"><div style="width:80px;height:5px;background:var(--bdr);border-radius:3px;overflow:hidden"><div style="width:15%;height:100%;background:var(--red);border-radius:3px"></div></div><span style="font-size:11px;color:var(--red);font-weight:600">15%</span></div></td>
-                  <td style="color:var(--red);font-weight:700">⛔ Hari ini!</td><td><span class="tag tag-red">Kritis</span></td>
-                </tr>
-                <tr>
-                  <td><span style="font-size:16px">🥛</span> Susu</td><td>1 L</td>
-                  <td><div style="display:flex;align-items:center;gap:8px"><div style="width:80px;height:5px;background:var(--bdr);border-radius:3px;overflow:hidden"><div style="width:70%;height:100%;background:var(--g3);border-radius:3px"></div></div><span style="font-size:11px;color:var(--g2);font-weight:600">70%</span></div></td>
-                  <td style="color:var(--g2);font-weight:500">7 hari lagi</td><td><span class="tag tag-green">Aman</span></td>
-                </tr>
-                <tr>
-                  <td><span style="font-size:16px">🍞</span> Roti Tawar</td><td>1 pak</td>
-                  <td><div style="display:flex;align-items:center;gap:8px"><div style="width:80px;height:5px;background:var(--bdr);border-radius:3px;overflow:hidden"><div style="width:25%;height:100%;background:#F59E0B;border-radius:3px"></div></div><span style="font-size:11px;color:var(--amb);font-weight:600">25%</span></div></td>
-                  <td style="color:var(--amb);font-weight:500">2 hari lagi</td><td><span class="tag tag-amber">Perhatian</span></td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
+        <!-- Static example table removed — pantry list intentionally empty by default -->
       </div><!-- /page-pantry -->
 
 

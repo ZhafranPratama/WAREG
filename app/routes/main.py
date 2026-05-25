@@ -1,5 +1,7 @@
 from datetime import datetime
+from pathlib import Path
 
+import pandas as pd
 from flask import Blueprint, jsonify, render_template, request
 
 from app.services.auth import token_required
@@ -72,3 +74,73 @@ def add_commodity_price(current_user):
     except Exception as exc:
         db.session.rollback()
         return jsonify({'error': f'Gagal menyimpan komoditas: {exc}'}), 500
+
+@main_bp.route('/api/commodity/import-excel', methods=['POST'])
+@token_required
+def import_commodity_prices_from_excel(current_user):
+    excel_path = Path(__file__).resolve().parents[2] / 'wfp_food_prices_idn_clean_12_category_table.xlsx'
+    if not excel_path.exists():
+        return jsonify({'error': 'File Excel tidak ditemukan di server.'}), 404
+
+    try:
+        df = pd.read_excel(excel_path, engine='openpyxl')
+    except Exception as exc:
+        return jsonify({'error': f'Gagal membaca file Excel: {exc}'}), 500
+
+    df = df[df['priceflag'].astype(str).str.lower() == 'actual']
+    df = df.dropna(subset=['commodity', 'price'])
+
+    imported = 0
+    for _, row in df.iterrows():
+        try:
+            commodity_name = str(row['commodity']).strip()
+            if not commodity_name:
+                continue
+
+            recorded_date = row['date']
+            if hasattr(recorded_date, 'date'):
+                recorded_date = recorded_date.date()
+            else:
+                recorded_date = pd.to_datetime(recorded_date, errors='coerce')
+                if pd.isna(recorded_date):
+                    recorded_date = datetime.utcnow().date()
+                else:
+                    recorded_date = recorded_date.date()
+
+            source = str(row.get('market', 'National Average')).strip() or 'National Average'
+            category = str(row.get('category', 'Lainnya')).strip() or 'Lainnya'
+            unit = str(row.get('unit', 'kg')).strip() or 'kg'
+            price_value = float(row['price'])
+            region_id = int(row['market_id']) if pd.notna(row.get('market_id')) else 1
+            price_type = 'retail'
+
+            existing = CommodityPrice.query.filter_by(
+                commodity_name=commodity_name,
+                recorded_date=recorded_date,
+                source=source,
+            ).first()
+            if existing:
+                continue
+
+            new_price = CommodityPrice(
+                commodity_name=commodity_name,
+                category=category,
+                region_id=region_id,
+                price_value=price_value,
+                unit=unit,
+                price_type=price_type,
+                recorded_date=recorded_date,
+                source=source,
+            )
+            db.session.add(new_price)
+            imported += 1
+        except Exception:
+            continue
+
+    try:
+        db.session.commit()
+    except Exception as exc:
+        db.session.rollback()
+        return jsonify({'error': f'Gagal menyimpan data Excel ke database: {exc}'}), 500
+
+    return jsonify({'message': 'Data Excel berhasil diimpor', 'imported': imported}), 201
