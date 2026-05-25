@@ -6,6 +6,7 @@ from app.services.auth import auth_bp, token_required
 from app.services.dataset import seed_commodity_prices
 from app.services.pantry import pantry_bp
 from app.services.predictor import predictor_bp
+from app.services.groupbuy import groupbuy_bp
 from app.routes.main import main_bp
 
 
@@ -27,6 +28,7 @@ def create_app():
     app.register_blueprint(auth_bp)
     app.register_blueprint(pantry_bp)
     app.register_blueprint(predictor_bp)
+    app.register_blueprint(groupbuy_bp)
     
 # Create tables and ensure the persona column exists for existing SQLite schemas
     with app.app_context():
@@ -48,4 +50,5 @@ __all__ = [
     'db', 'User', 'CommodityPrice', 'PantryItem',
     'auth_bp', 'token_required',
     'pantry_bp', 'predictor_bp',
+    'groupbuy_bp',
 ]

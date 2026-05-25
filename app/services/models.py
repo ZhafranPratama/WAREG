@@ -41,3 +41,24 @@ class PantryItem(db.Model):
     expiry_date = db.Column(db.Date, nullable=True)
     purchase_price = db.Column(db.Numeric(10, 2), nullable=True)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
+class GroupBuy(db.Model):
+    __tablename__ = 'group_buys'
+    group_id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    title = db.Column(db.String(150), nullable=False)
+    commodity_name = db.Column(db.String(100), nullable=False)
+    price_per_person = db.Column(db.Numeric(12, 2), nullable=False)
+    target_slots = db.Column(db.Integer, nullable=False, default=8)
+    created_by = db.Column(db.String(36), db.ForeignKey('users.user_id'), nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    ends_at = db.Column(db.Date, nullable=True)
+    status = db.Column(db.Enum('open', 'ready', 'closed', name='group_status'), default='open')
+
+
+class GroupParticipant(db.Model):
+    __tablename__ = 'group_participants'
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    group_id = db.Column(db.String(36), db.ForeignKey('group_buys.group_id'), nullable=False)
+    user_id = db.Column(db.String(36), db.ForeignKey('users.user_id'), nullable=False)
+    joined_at = db.Column(db.DateTime, default=datetime.utcnow)
