@@ -23,6 +23,15 @@ def _compute_pantry_status(expiry_date):
 @pantry_bp.route('/api/pantry', methods=['GET'])
 @token_required
 def get_pantry(current_user):
+    # Auto-delete expired items (expiry_date < today) for this user
+    try:
+        expired_q = PantryItem.query.filter(PantryItem.user_id==current_user.user_id, PantryItem.expiry_date != None, PantryItem.expiry_date < date.today())
+        if expired_q.count() > 0:
+            expired_q.delete(synchronize_session=False)
+            db.session.commit()
+    except Exception:
+        db.session.rollback()
+
     items = PantryItem.query.filter_by(user_id=current_user.user_id).order_by(PantryItem.expiry_date.asc()).all()
     result = []
     for i in items:
@@ -70,3 +79,18 @@ def add_item(current_user):
     except Exception as exc:
         db.session.rollback()
         return jsonify({'error': f'Gagal menyimpan data pantry: {exc}'}), 500
+
+
+@pantry_bp.route('/api/pantry/<item_id>', methods=['DELETE'])
+@token_required
+def delete_item(current_user, item_id):
+    try:
+        item = PantryItem.query.filter_by(item_id=item_id, user_id=current_user.user_id).first()
+        if not item:
+            return jsonify({'error': 'Item tidak ditemukan'}), 404
+        db.session.delete(item)
+        db.session.commit()
+        return jsonify({'message': 'Item dihapus'}), 200
+    except Exception as exc:
+        db.session.rollback()
+        return jsonify({'error': f'Gagal menghapus item: {exc}'}), 500

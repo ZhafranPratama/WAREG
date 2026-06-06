@@ -258,9 +258,14 @@ function loadPantryItems() {
         const statusLabel = item.status_text || 'Status tidak tersedia';
         const itemHTML = `
           <div class="pantry-card pantry-card-clickable" data-item-id="${item.item_id}">
-            <div class="p-head">
-              <span class="p-title">${item.commodity}</span>
-              <span class="badge badge-success">${item.quantity} ${item.unit}</span>
+            <div class="p-head" style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+              <div style="flex:1">
+                <span class="p-title">${item.commodity}</span>
+                <div style="font-size:12px;color:var(--text3)">${item.quantity} ${item.unit}</div>
+              </div>
+              <div style="display:flex;gap:8px;align-items:center">
+                <button class="btn btn-out btn-sm pantry-delete-btn" data-item-id="${item.item_id}" title="Hapus">Hapus</button>
+              </div>
             </div>
             <div class="p-body">
               <div class="p-info">Beli: <strong>${item.purchase_date}</strong></div>
@@ -284,8 +289,106 @@ function loadPantryItems() {
               }
             });
       });
+      // Attach delete handlers (stop propagation so it doesn't open detail)
+      container.querySelectorAll('.pantry-delete-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const id = btn.getAttribute('data-item-id');
+          if (!id) return;
+          if (!confirm('Hapus bahan ini dari daftar? Tindakan ini tidak dapat dibatalkan.')) return;
+          deletePantryItem(id);
+        });
+      });
+      // Perbarui notifikasi/indikator dan tabel stok berdasarkan data pantry yang baru dimuat
+      try {
+        updatePantryNotifications(data);
+      } catch (err) {
+        console.warn('Gagal memperbarui notifikasi pantry:', err);
+      }
+      try {
+        updateStockTable(data);
+      } catch (err) {
+        console.warn('Gagal memperbarui tabel stok pantry:', err);
+      }
     })
     .catch(err => console.error("Gagal memuat list dapur:", err));
+}
+
+// Update UI notifikasi berdasarkan kondisi pantry
+function updatePantryNotifications(items) {
+  const data = items || [];
+  const attentionCount = data.filter(i => ['expired','expires-today','soon','warning'].includes(i.status)).length;
+
+  // Update toast di halaman pantry
+  const pantryToastTitle = document.querySelector('#page-pantry .toast.red .toast-title');
+  if (pantryToastTitle) {
+    pantryToastTitle.textContent = attentionCount > 0 ? `${attentionCount} bahan perlu perhatian segera!` : 'Semua bahan aman';
+  }
+
+  // Update subtext (list contoh item yang perlu perhatian)
+  const pantryToastSub = document.querySelector('#page-pantry .toast.red .toast-sub');
+  if (pantryToastSub) {
+    if (attentionCount > 0) {
+      const alertItems = data
+        .filter(i => ['expired','expires-today','soon','warning'].includes(i.status))
+        .sort((a,b) => (a.days_remaining ?? 999) - (b.days_remaining ?? 999))
+        .slice(0,3);
+      const subText = alertItems.map(i => `${i.commodity} ${String(i.status_text).toLowerCase()}`).join(', ');
+      pantryToastSub.textContent = subText || '';
+    } else {
+      pantryToastSub.textContent = '';
+    }
+  }
+
+  // Update dot notifikasi di topbar (tampilkan jumlah)
+  const notifDot = document.querySelector('.notif-dot');
+  if (notifDot) {
+    if (attentionCount > 0) {
+      notifDot.style.display = 'block';
+      notifDot.textContent = attentionCount > 9 ? '9+' : String(attentionCount);
+      notifDot.title = `${attentionCount} notifikasi peringatan kadaluarsa`;
+      notifDot.style.minWidth = '18px';
+      notifDot.style.height = '18px';
+      notifDot.style.padding = '0 5px';
+      notifDot.style.borderRadius = '9px';
+      notifDot.style.fontSize = '12px';
+      notifDot.style.lineHeight = '18px';
+      notifDot.style.textAlign = 'center';
+    } else {
+      notifDot.style.display = 'none';
+      notifDot.textContent = '';
+    }
+  }
+}
+
+// Delete pantry item by id
+async function deletePantryItem(itemId) {
+  try {
+    const res = await fetch(`/api/pantry/${itemId}`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        ...getAuthHeaders(),
+      },
+    });
+
+    // try parse json, otherwise get text for debugging
+    let result = {};
+    try { result = await res.json(); } catch(e) { result = { __raw: await res.text() }; }
+
+    if (!res.ok) {
+      const serverMsg = result.error || result.message || result.__raw || `HTTP ${res.status}`;
+      console.error('DELETE /api/pantry response:', res.status, result);
+      throw new Error(serverMsg || 'Gagal menghapus item');
+    }
+    alert('Item berhasil dihapus');
+    loadDashboardStats();
+    loadPantryItems();
+    loadPriceTrends();
+  } catch (err) {
+    console.error('deletePantryItem error:', err);
+    alert('Gagal menghapus item: ' + (err.message || err));
+  }
 }
 
 function loadPriceForecast() {
@@ -396,7 +499,10 @@ function handlePantryForm() {
     const unit = document.getElementById('input-comm-unit').value.trim();
     const purchaseDate = document.getElementById('input-purchase-date').value;
     const expiryDate = document.getElementById('input-expiry-date').value;
-    const purchasePrice = document.getElementById('input-purchase-price').value;
+    const rawPrice = document.getElementById('input-purchase-price').value || '';
+    // sanitize price: allow users to type with or without separators and optional 'Rp'
+    const digitsOnly = rawPrice.replace(/[^0-9]/g, '');
+    const purchasePrice = digitsOnly ? parseFloat(digitsOnly) : null;
 
     const payload = {
       commodity_name: name,
@@ -404,7 +510,7 @@ function handlePantryForm() {
       unit: unit || 'pcs',
       purchase_date: purchaseDate,
       expiry_date: expiryDate || null,
-      purchase_price: purchasePrice ? parseFloat(purchasePrice) : null,
+      purchase_price: purchasePrice != null ? purchasePrice : null,
     };
 
     fetch('/api/pantry', {
@@ -610,4 +716,94 @@ function initSaveProfile() {
 function logout() {
   localStorage.removeItem('wareg_token');
   window.location.href = '/login';
+}
+
+// Render/update tabel Stok Bahan Dapur dari data pantry
+function updateStockTable(items) {
+  const data = items || [];
+  const tbody = document.getElementById('stock-table-body');
+  if (!tbody) return;
+
+  // Default sample items (preserved UI content) if backend has no data
+  const defaultSamples = [
+    { commodity: 'Beras', quantity: 5, unit: 'kg', expiry_date: addDaysISO(120), status: 'ok', status_text: 'Aman', stock_pct: 65 },
+    { commodity: 'Telur', quantity: 10, unit: 'butir', expiry_date: addDaysISO(5), status: 'warning', status_text: 'Perhatian', stock_pct: 35 },
+    { commodity: 'Mentega', quantity: 0.2, unit: 'kg', expiry_date: addDaysISO(0), status: 'expired', status_text: 'Kritis', stock_pct: 15 },
+    { commodity: 'Susu', quantity: 1, unit: 'L', expiry_date: addDaysISO(7), status: 'ok', status_text: 'Aman', stock_pct: 70 },
+    { commodity: 'Roti Tawar', quantity: 1, unit: 'pak', expiry_date: addDaysISO(2), status: 'warning', status_text: 'Perhatian', stock_pct: 25 },
+  ];
+
+  const source = data.length === 0 ? defaultSamples : data;
+
+  const rows = source.map(item => {
+    const name = item.commodity || '—';
+    const qty = item.quantity != null ? `${item.quantity} ${item.unit || ''}`.trim() : '-';
+
+    // determine percentage: prefer explicit stock_pct, otherwise estimate from quantity
+    let pct = null;
+    if (item.stock_pct != null) pct = Math.max(0, Math.min(100, Number(item.stock_pct)));
+    else if (item.quantity != null) {
+      const q = Number(item.quantity);
+      if (!isNaN(q)) {
+        if (q <= 1) pct = 10;
+        else if (q <= 2) pct = 25;
+        else if (q <= 5) pct = 50;
+        else if (q <= 10) pct = 75;
+        else pct = 90;
+      }
+    }
+
+    // Expiry / days left
+    let expiryLabel = '-';
+    if (item.expiry_date) {
+      const d = new Date(item.expiry_date);
+      const now = new Date();
+      const diff = Math.ceil((d - new Date(now.getFullYear(), now.getMonth(), now.getDate())) / (1000*60*60*24));
+      if (isNaN(diff)) expiryLabel = item.expiry_date;
+      else if (diff <= 0) expiryLabel = '⛔ Hari ini!';
+      else expiryLabel = `${diff} hari lagi`;
+    }
+
+    // status badge
+    const statusClass = item.status === 'expired' || item.status === 'expires-today' ? 'tag-red' : item.status === 'soon' || item.status === 'warning' ? 'tag-amber' : 'tag-green';
+    const statusText = item.status_text || (item.status === 'expired' ? 'Kritis' : 'Aman');
+
+    const barWidth = pct != null ? `${pct}%` : '0%';
+    const pctLabel = pct != null ? `${pct}%` : '';
+
+    return `
+      <tr>
+        <td>${escapeHtml(name)}</td>
+        <td>${escapeHtml(qty)}</td>
+        <td>
+          <div style="display:flex;align-items:center;gap:8px">
+            <div style="width:80px;height:5px;background:var(--bdr);border-radius:3px;overflow:hidden">
+              <div style="width:${barWidth};height:100%;background:${pct != null ? (pct <= 20 ? 'var(--red)' : pct <= 50 ? '#F59E0B' : 'var(--g3)') : 'var(--g3)'};border-radius:3px"></div>
+            </div>
+            <span style="font-size:11px;color:${pct != null ? (pct <= 20 ? 'var(--red)' : pct <= 50 ? 'var(--amb)' : 'var(--g2)') : 'var(--text3)'};font-weight:600">${escapeHtml(pctLabel)}</span>
+          </div>
+        </td>
+        <td style="${expiryLabel.includes('Hari ini') ? 'color:var(--red);font-weight:700' : ''}">${escapeHtml(expiryLabel)}</td>
+        <td><span class="tag ${statusClass}">${escapeHtml(statusText)}</span></td>
+      </tr>
+    `;
+  }).join('');
+
+  tbody.innerHTML = rows;
+}
+
+function escapeHtml(text) {
+  if (text == null) return '';
+  return String(text).replace(/[&<>"']/g, function (s) {
+    return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"})[s];
+  });
+}
+
+// Map commodity name to a relevant emoji using keyword matching
+// commodityToEmoji removed — no emoji in stock table per UX request
+
+function addDaysISO(days) {
+  const d = new Date();
+  d.setDate(d.getDate() + days);
+  return d.toISOString().split('T')[0];
 }
