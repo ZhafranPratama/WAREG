@@ -18,7 +18,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Inisialisasi Fungsi Interaksi UI Bawaan Figma
   initToggles();
-  initGroupBuyButtons();
   initAddKitchen();
   initNotifBell();
   animateBars();
@@ -38,11 +37,11 @@ document.addEventListener('DOMContentLoaded', () => {
   loadPriceTrends();
   loadPriceForecast();
   loadMarketComparison();
+  loadMarketRegions();
   handlePantryForm();
   handleImportExcel();
   loadPantryItems();
-  loadGroupBuys();
-  initGroupBuyForm();
+  
 });
 
 function getAuthHeaders() {
@@ -890,7 +889,9 @@ async function loadPriceForecast() {
 }
 
 function loadMarketComparison() {
-  fetch('/api/predictor/compare?commodity=Chili%20(Red)&region_id=1')
+  const sel = document.getElementById('market-region-select');
+  const regionId = sel ? sel.value : '1';
+  fetch(`/api/predictor/compare?commodity=Chili%20(Red)&region_id=${encodeURIComponent(regionId)}`)
     .then(res => res.ok ? res.json() : Promise.reject('Tidak dapat mengambil rekomendasi pasar'))
     .then(result => {
       const data = result.data || {};
@@ -906,12 +907,10 @@ function loadMarketComparison() {
       let html = '<div style="display:grid;gap:12px">';
       items.slice(0, 4).forEach(item => {
         const price = item.predicted_price ? Number(item.predicted_price).toLocaleString('id-ID') : '--';
-        const distance = item.distance ? item.distance.toFixed(1) : '--';
         html += `
           <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px;background:rgba(255,255,255,0.04);border-radius:14px">
             <div>
               <div style="font-size:14px;font-weight:700;color:var(--text)">${item.market}</div>
-              <div style="font-size:12px;color:var(--text3)">Jarak ${distance} km</div>
             </div>
             <div style="font-size:14px;font-weight:700;color:var(--g2)">Rp ${price}</div>
           </div>`;
@@ -929,43 +928,32 @@ function loadMarketComparison() {
     });
 }
 
-function loadMarketComparison() {
-  fetch('/api/predictor/compare?commodity=Chili%20(Red)&region_id=1')
-    .then(res => res.ok ? res.json() : Promise.reject('Tidak dapat mengambil rekomendasi pasar'))
+function loadMarketRegions() {
+  fetch('/api/predictor/regions')
+    .then(res => res.ok ? res.json() : Promise.reject('Gagal memuat wilayah'))
     .then(result => {
-      const data = result.data || {};
-      const marketBody = document.getElementById('market-compare-body');
-      if (!marketBody) return;
+      const regions = result.data || [];
+      const sel = document.getElementById('market-region-select');
+      if (!sel) return;
 
-      const items = data.recommendations || [];
-      if (items.length === 0) {
-        marketBody.innerHTML = '<p style="padding:16px;color:var(--text3);margin:0">Rekomendasi pasar tidak tersedia saat ini.</p>';
-        return;
+      // preserve previously selected value when refreshing options
+      const prev = sel.value;
+      sel.innerHTML = regions.map(r => `<option value="${r.id}">${r.name}</option>`).join('');
+      if (prev) {
+        // try to restore previous selection; if not present, keep default first
+        const found = Array.from(sel.options).some(opt => opt.value === prev);
+        if (found) sel.value = prev;
       }
 
-      let html = '<div style="display:grid;gap:12px">';
-      items.slice(0, 4).forEach(item => {
-        const price = item.predicted_price ? Number(item.predicted_price).toLocaleString('id-ID') : '--';
-        const distance = item.distance ? item.distance.toFixed(1) : '--';
-        html += `
-          <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px;background:rgba(255,255,255,0.04);border-radius:14px">
-            <div>
-              <div style="font-size:14px;font-weight:700;color:var(--text)">${item.market}</div>
-              <div style="font-size:12px;color:var(--text3)">Jarak ${distance} km</div>
-            </div>
-            <div style="font-size:14px;font-weight:700;color:var(--g2)">Rp ${price}</div>
-          </div>`;
-      });
-      html += '</div>';
-      html += `<div style="margin-top:14px;font-size:13px;color:var(--text3)">${data.recommendation || 'Rekomendasi dihitung oleh model AI.'}</div>`;
-      marketBody.innerHTML = html;
+      sel.onchange = () => loadMarketComparison();
+      const btn = document.getElementById('market-region-refresh');
+      if (btn) btn.onclick = () => loadMarketRegions();
+
+      // trigger load for current selection (preserved or first)
+      loadMarketComparison();
     })
     .catch(err => {
-      console.error('Gagal memuat rekomendasi pasar:', err);
-      const marketBody = document.getElementById('market-compare-body');
-      if (marketBody) {
-        marketBody.innerHTML = '<p style="padding:16px;color:var(--text3);margin:0">Rekomendasi pasar tidak tersedia.</p>';
-      }
+      console.error('Gagal memuat daftar wilayah:', err);
     });
 }
 
@@ -1097,56 +1085,6 @@ function handleImportExcel() {
   });
 }
 
-function initGroupBuyForm() {
-  const form = document.getElementById('form-groupbuy-create');
-  if (!form) return;
-
-  form.addEventListener('submit', async function(event) {
-    event.preventDefault();
-
-    const title = document.getElementById('gb-input-title').value.trim();
-    const commodity = document.getElementById('gb-input-commodity').value.trim();
-    const price = Number(document.getElementById('gb-input-price').value);
-    const slots = Number(document.getElementById('gb-input-slots').value);
-    const endsAt = document.getElementById('gb-input-ends-at').value;
-
-    if (!title || !commodity || !price || !slots) {
-      alert('Semua field kecuali tanggal akhir wajib diisi.');
-      return;
-    }
-
-    const payload = {
-      title,
-      commodity_name: commodity,
-      price_per_person: price,
-      target_slots: slots,
-      ends_at: endsAt || null,
-    };
-
-    try {
-      const response = await fetch('/api/groupbuys', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...getAuthHeaders(),
-        },
-        body: JSON.stringify(payload),
-      });
-
-      const result = await response.json();
-      if (!response.ok) {
-        throw new Error(result.error || 'Gagal membuat group buy');
-      }
-
-      alert('Grup berhasil dibuat!');
-      form.reset();
-      loadGroupBuys();
-    } catch (error) {
-      console.error(error);
-      alert(error.message || 'Terjadi kesalahan saat membuat grup');
-    }
-  });
-}
 
 /* ── Fungsi Interaksi UI Bawaan Figma (Pertahankan Utuh) ─────────── */
 function initToggles() {
@@ -1158,120 +1096,6 @@ function initToggles() {
   });
 }
 
-function initGroupBuyButtons() {
-  document.querySelectorAll('.gb-join-btn').forEach(btn => {
-    btn.addEventListener('click', async function () {
-      const groupId = btn.dataset.groupId;
-      const original = this.textContent;
-
-      if (groupId) {
-        // call backend join endpoint
-        try {
-          this.disabled = true;
-          this.textContent = 'Mencoba bergabung...';
-          const res = await fetch(`/api/groupbuys/${groupId}/join`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              ...getAuthHeaders(),
-            },
-          });
-          const j = await res.json().catch(() => ({}));
-          if (res.ok) {
-            this.textContent = '✓ Joined!';
-            this.style.opacity = '0.6';
-            // optionally refresh group list
-            loadGroupBuys();
-          } else {
-            alert(j.error || j.message || 'Gagal bergabung ke grup');
-            this.textContent = original;
-          }
-        } catch (err) {
-          console.error(err);
-          alert('Terjadi kesalahan saat bergabung');
-          this.textContent = original;
-        } finally {
-          setTimeout(() => {
-            this.disabled = false;
-            this.style.opacity = '';
-            this.textContent = original;
-          }, 1500);
-        }
-      } else {
-        // fallback visual behaviour
-        this.textContent = '✓ Joined!';
-        this.disabled = true;
-        this.style.opacity = '0.6';
-        setTimeout(() => {
-          this.textContent = original;
-          this.disabled = false;
-          this.style.opacity = '';
-        }, 2000);
-      }
-    });
-  });
-}
-
-// Load group buys and render into page (optional enhancement)
-async function loadGroupBuys() {
-  try {
-    const res = await fetch('/api/groupbuys');
-    if (!res.ok) return;
-    const data = await res.json();
-    const groups = (data.data || []);
-    const container = document.querySelector('#page-groupbuy .grid2');
-    if (!container) return;
-
-    // find left and right columns
-    const leftCol = container.querySelector('.col');
-    const cols = container.querySelectorAll('.col');
-    if (!cols || cols.length < 2) return;
-    const colLeft = cols[0];
-    const colRight = cols[1];
-
-    // quick render: clear left and right columns and append cards
-    colLeft.innerHTML = '';
-    colRight.innerHTML = '';
-
-    groups.forEach((g, idx) => {
-      const card = document.createElement('div');
-      card.className = 'card';
-      const readyTag = g.status === 'ready' ? '<span class="tag tag-green">✓ Ready!</span>' : `<span class="tag tag-amber">${g.ends_at || ''}</span>`;
-      card.innerHTML = `
-        <div class="card-head">
-          <span class="card-title">${g.title}</span>
-          ${readyTag}
-        </div>
-        <div class="card-body">
-          <div style="display:flex;justify-content:space-between;margin-bottom:10px">
-            <div>
-              <div style="font-size:18px;font-weight:700;color:var(--g2)">Rp ${Number(g.price_per_person).toLocaleString('id-ID')}<span style="font-size:12px;color:var(--text3);font-weight:400">/orang</span></div>
-              <div style="font-size:11px;color:var(--g3);font-weight:600">Hemat estimasi</div>
-            </div>
-            <span class="tag tag-blue">${g.participants_count}/${g.target_slots}</span>
-          </div>
-          <div class="gb-prog" style="height:7px;margin-bottom:8px"><div class="gb-fill" style="width:${Math.min(100, Math.round((g.participants_count / Math.max(1, g.target_slots)) * 100))}%"></div></div>
-          <div class="gb-avs" style="margin-bottom:12px">
-            <div class="av-sm" style="background:#D8F3DC;color:var(--g2)">IB</div>
-            <div class="av-sm" style="background:#BFDBFE;color:var(--blu)">AS</div>
-            <div class="av-sm" style="background:var(--bdr);color:var(--text3)">+${Math.max(0, g.participants_count - 2)}</div>
-          </div>
-          <button class="btn btn-out gb-join-btn" data-group-id="${g.group_id}" style="width:100%;justify-content:center">Join Group</button>
-        </div>
-      `;
-
-      // alternate columns
-      if (idx % 2 === 0) colLeft.appendChild(card);
-      else colRight.appendChild(card);
-    });
-
-    // re-init join buttons on freshly rendered content
-    initGroupBuyButtons();
-    animateBars();
-  } catch (err) {
-    console.error('Gagal memuat group buys:', err);
-  }
-}
 
 function initAddKitchen() {
   document.querySelectorAll('.add-kitchen-btn').forEach(btn => {
