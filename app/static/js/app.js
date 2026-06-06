@@ -709,7 +709,7 @@ async function deletePantryItem(itemId) {
   }
 }
 
-function loadPriceForecast() {
+async function loadPriceForecast() {
   try {
     const response = await fetch('/api/commodity', {
       headers: {
@@ -1283,4 +1283,95 @@ function initSaveProfile() {
 function logout() {
   localStorage.removeItem('wareg_token');
   window.location.href = '/login';
+}
+
+// Render/update tabel Stok Bahan Dapur dari data pantry
+function updateStockTable(items) {
+  const data = items || [];
+  const tbody = document.getElementById('stock-table-body');
+  if (!tbody) return;
+
+  // Default sample items (preserved UI content) if backend has no data
+  const defaultSamples = [
+    { commodity: 'Beras', quantity: 5, unit: 'kg', expiry_date: addDaysISO(120), status: 'ok', status_text: 'Aman', stock_pct: 65 },
+    { commodity: 'Telur', quantity: 10, unit: 'butir', expiry_date: addDaysISO(5), status: 'warning', status_text: 'Perhatian', stock_pct: 35 },
+    { commodity: 'Mentega', quantity: 0.2, unit: 'kg', expiry_date: addDaysISO(0), status: 'expired', status_text: 'Kritis', stock_pct: 15 },
+    { commodity: 'Susu', quantity: 1, unit: 'L', expiry_date: addDaysISO(7), status: 'ok', status_text: 'Aman', stock_pct: 70 },
+    { commodity: 'Roti Tawar', quantity: 1, unit: 'pak', expiry_date: addDaysISO(2), status: 'warning', status_text: 'Perhatian', stock_pct: 25 },
+  ];
+
+  const source = data.length === 0 ? defaultSamples : data;
+
+  const rows = source.map(item => {
+    const name = item.commodity || '—';
+    const qty = item.quantity != null ? `${item.quantity} ${item.unit || ''}`.trim() : '-';
+
+    // determine percentage: prefer explicit stock_pct, otherwise estimate from quantity
+    let pct = null;
+    if (item.stock_pct != null) pct = Math.max(0, Math.min(100, Number(item.stock_pct)));
+    else if (item.quantity != null) {
+      const q = Number(item.quantity);
+      if (!isNaN(q)) {
+        if (q <= 1) pct = 10;
+        else if (q <= 2) pct = 25;
+        else if (q <= 5) pct = 50;
+        else if (q <= 10) pct = 75;
+        else pct = 90;
+      }
+    }
+
+    // Expiry / days left
+    let expiryLabel = '-';
+    if (item.expiry_date) {
+      const d = new Date(item.expiry_date);
+      const now = new Date();
+      const diff = Math.ceil((d - new Date(now.getFullYear(), now.getMonth(), now.getDate())) / (1000*60*60*24));
+      if (isNaN(diff)) expiryLabel = item.expiry_date;
+      else if (diff <= 0) expiryLabel = '⛔ Hari ini!';
+      else expiryLabel = `${diff} hari lagi`;
+    }
+
+    // status badge
+    const statusClass = item.status === 'expired' || item.status === 'expires-today' ? 'tag-red' : item.status === 'soon' || item.status === 'warning' ? 'tag-amber' : 'tag-green';
+    const statusText = item.status_text || (item.status === 'expired' ? 'Kritis' : 'Aman');
+
+    const barWidth = pct != null ? `${pct}%` : '0%';
+    const pctLabel = pct != null ? `${pct}%` : '';
+
+    return `
+      <tr>
+        <td>${escapeHtml(name)}</td>
+        <td>${escapeHtml(qty)}</td>
+        <td>${item.purchase_price != null ? ('Rp ' + Number(item.purchase_price).toLocaleString('id-ID')) : '-'}</td>
+        <td>
+          <div style="display:flex;align-items:center;gap:8px">
+            <div style="width:80px;height:5px;background:var(--bdr);border-radius:3px;overflow:hidden">
+              <div style="width:${barWidth};height:100%;background:${pct != null ? (pct <= 20 ? 'var(--red)' : pct <= 50 ? '#F59E0B' : 'var(--g3)') : 'var(--g3)'};border-radius:3px"></div>
+            </div>
+            <span style="font-size:11px;color:${pct != null ? (pct <= 20 ? 'var(--red)' : pct <= 50 ? 'var(--amb)' : 'var(--g2)') : 'var(--text3)'};font-weight:600">${escapeHtml(pctLabel)}</span>
+          </div>
+        </td>
+        <td style="${expiryLabel.includes('Hari ini') ? 'color:var(--red);font-weight:700' : ''}">${escapeHtml(expiryLabel)}</td>
+        <td><span class="tag ${statusClass}">${escapeHtml(statusText)}</span></td>
+      </tr>
+    `;
+  }).join('');
+
+  tbody.innerHTML = rows;
+}
+
+function escapeHtml(text) {
+  if (text == null) return '';
+  return String(text).replace(/[&<>"']/g, function (s) {
+    return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"})[s];
+  });
+}
+
+// Map commodity name to a relevant emoji using keyword matching
+// commodityToEmoji removed — no emoji in stock table per UX request
+
+function addDaysISO(days) {
+  const d = new Date();
+  d.setDate(d.getDate() + days);
+  return d.toISOString().split('T')[0];
 }

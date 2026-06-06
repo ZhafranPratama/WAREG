@@ -70,3 +70,17 @@ def add_item(current_user):
     except Exception as exc:
         db.session.rollback()
         return jsonify({'error': f'Gagal menyimpan data pantry: {exc}'}), 500
+
+@pantry_bp.route('/api/pantry/<item_id>', methods=['DELETE'])
+@token_required
+def delete_item(current_user, item_id):
+    try:
+        item = PantryItem.query.filter_by(item_id=item_id, user_id=current_user.user_id).first()
+        if not item:
+            return jsonify({'error': 'Item tidak ditemukan'}), 404
+        db.session.delete(item)
+        db.session.commit()
+        return jsonify({'message': 'Item dihapus'}), 200
+    except Exception as exc:
+        db.session.rollback()
+        return jsonify({'error': f'Gagal menghapus item: {exc}'}), 500
