@@ -1000,11 +1000,16 @@
                 </div>
                 <div class="form-group">
                   <label class="form-label">Lokasi</label>
-                  <input id="account-location-input" class="form-input" value="Jakarta Selatan" type="text" />
+                  <div class="autocomplete">
+                    <input id="account-location" class="form-input" type="text" placeholder="Pilih Lokasi" autocomplete="off"
+                      aria-label="Lokasi" aria-controls="account-location-options" aria-expanded="false" aria-autocomplete="list" />
+                    <div id="account-location-options" class="autocomplete-options" role="listbox"></div>
+                  </div>
                 </div>
                 <div class="form-group">
                   <label class="form-label">Persona</label>
-                  <select id="account-persona-select" class="form-input form-select">
+                  <select id="account-persona-select" class="form-input form-select" aria-label="Persona">
+                    <option value="" disabled selected hidden>Pilih Persona</option>
                     <option value="ibu rumah tangga">Ibu Rumah Tangga</option>
                     <option value="wirausaha">Wirausaha</option>
                     <option value="mahasiswa">Mahasiswa</option>
@@ -1029,32 +1034,6 @@
               </div>
             </div>
 
-            <div class="card">
-              <div class="card-head"><span class="card-title">Notifikasi</span></div>
-              <div class="card-body">
-                <div class="notif-row">
-                  <div>
-                    <div class="notif-row-label">Peringatan kadaluarsa</div>
-                    <div class="notif-row-sub">Notif H-2 sebelum kadaluarsa</div>
-                  </div>
-                  <div class="toggle-wrap on"><div class="toggle-knob"></div></div>
-                </div>
-                <div class="notif-row">
-                  <div>
-                    <div class="notif-row-label">Prediksi harga turun</div>
-                    <div class="notif-row-sub">Notif saat ada penurunan &gt;10%</div>
-                  </div>
-                  <div class="toggle-wrap on"><div class="toggle-knob"></div></div>
-                </div>
-                <div class="notif-row">
-                  <div>
-                    <div class="notif-row-label">Update grup beli bareng</div>
-                    <div class="notif-row-sub">Notif saat ada peserta baru</div>
-                  </div>
-                  <div class="toggle-wrap off"><div class="toggle-knob"></div></div>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
       </div><!-- /page-account -->
@@ -1063,6 +1042,7 @@
   </div><!-- /main -->
 </div><!-- /shell -->
 
+<script src="{{ url_for('static', filename='js/locations.js') }}?v=20260606"></script>
 <script src="{{ url_for('static', filename='js/app.js') }}?v=20260523-price-predictor"></script>
 </body>
 </html>

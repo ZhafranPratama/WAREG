@@ -24,6 +24,9 @@ document.addEventListener('DOMContentLoaded', () => {
   animateBars();
   initChartHover();
   initSaveProfile();
+  if (typeof populateLocationSelect === 'function') {
+    populateLocationSelect('account-location');
+  }
 
   // Muat data user dari backend jika sudah login
   if (getToken()) {
@@ -87,7 +90,8 @@ function loadCurrentUser() {
       const accountProfileLocation = document.getElementById('account-profile-location');
       const accountNameInput = document.getElementById('account-name-input');
       const accountEmailInput = document.getElementById('account-email-input');
-      const accountLocationInput = document.getElementById('account-location-input');
+      const accountLocationInput = document.getElementById('account-location');
+      const accountLocationSelect = document.getElementById('account-location-select');
       const accountPersonaSelect = document.getElementById('account-persona-select');
 
       const initials = formatInitials(user.full_name);
@@ -101,7 +105,19 @@ function loadCurrentUser() {
       if (accountProfileLocation) accountProfileLocation.textContent = `📍 ${user.location_name || 'Jakarta Selatan'}`;
       if (accountNameInput) accountNameInput.value = user.full_name;
       if (accountEmailInput) accountEmailInput.value = user.email;
-      if (accountLocationInput) accountLocationInput.value = user.location_name || 'Jakarta Selatan';
+      if (accountLocationInput) {
+        if (typeof populateLocationSelect === 'function') {
+          populateLocationSelect('account-location', user.location_name || 'Jakarta Selatan');
+        } else {
+          accountLocationInput.value = user.location_name || 'Jakarta Selatan';
+        }
+      } else if (accountLocationSelect) {
+        if (typeof populateLocationSelect === 'function') {
+          populateLocationSelect('account-location', user.location_name || 'Jakarta Selatan');
+        } else {
+          accountLocationSelect.value = user.location_name || 'Jakarta Selatan';
+        }
+      }
       if (accountPersonaSelect) accountPersonaSelect.value = user.persona || 'other';
     })
     .catch(() => {
@@ -115,17 +131,18 @@ function loadCurrentUser() {
 async function saveProfile() {
   const accountNameInput = document.getElementById('account-name-input');
   const accountEmailInput = document.getElementById('account-email-input');
-  const accountLocationInput = document.getElementById('account-location-input');
+  const accountLocationInput = document.getElementById('account-location');
+  const accountLocationSelect = document.getElementById('account-location-select');
   const accountPersonaSelect = document.getElementById('account-persona-select');
 
-  if (!accountNameInput || !accountEmailInput || !accountLocationInput || !accountPersonaSelect) {
+  if (!accountNameInput || !accountEmailInput || !(accountLocationInput || accountLocationSelect) || !accountPersonaSelect) {
     return false;
   }
 
   const profileData = {
     full_name: accountNameInput.value.trim(),
     email: accountEmailInput.value.trim(),
-    location_name: accountLocationInput.value.trim(),
+    location_name: (accountLocationInput ? accountLocationInput.value : accountLocationSelect.value).trim(),
     persona: accountPersonaSelect.value,
   };
 
