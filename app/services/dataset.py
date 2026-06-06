@@ -65,7 +65,7 @@ def load_dataset_dataframe():
 
 
 def build_region_lookup(dataframe):
-    region_names = dataframe['admin1'].dropna().astype(str).unique().tolist()
+    region_names = dataframe['admin2'].dropna().astype(str).unique().tolist()
 
     if not region_names:
         return {}
@@ -92,7 +92,7 @@ def seed_commodity_prices(force=False):
         raise ValueError('Tidak ada data komoditas yang dapat disimpan ke SQLite.')
 
     region_lookup = build_region_lookup(supported_frame)
-    supported_frame['region_id'] = supported_frame['admin1'].fillna('National').astype(str).map(region_lookup)
+    supported_frame['region_id'] = supported_frame['admin2'].fillna('National').astype(str).map(region_lookup)
     supported_frame['region_id'] = supported_frame['region_id'].fillna(1).astype(int)
     supported_frame['price_type'] = 'retail'
     supported_frame['source'] = 'WFP CSV'
