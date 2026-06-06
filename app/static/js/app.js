@@ -269,11 +269,11 @@ function loadPantryItems() {
             </div>
             <div class="p-body">
               <div class="p-info">Beli: <strong>${item.purchase_date}</strong></div>
+              <div class="p-info">Harga beli: <strong>${item.purchase_price ? ('Rp ' + Number(item.purchase_price).toLocaleString('id-ID')) : '-'}</strong></div>
               <div class="p-info">Kadaluarsa: <strong>${item.expiry_date || '-'}</strong></div>
             </div>
             <div class="p-info" style="margin-top: 10px; display:flex; justify-content:space-between; align-items:center;">
               <span class="tag ${statusClass}" style="padding: 4px 8px; font-size:12px;">${statusLabel}</span>
-              <span class="p-info" style="font-size:12px;color:var(--text3)">Klik untuk detail</span>
             </div>
           </div>
         `;
@@ -317,7 +317,18 @@ function loadPantryItems() {
 // Update UI notifikasi berdasarkan kondisi pantry
 function updatePantryNotifications(items) {
   const data = items || [];
-  const attentionCount = data.filter(i => ['expired','expires-today','soon','warning'].includes(i.status)).length;
+  // Attention only for items expiring within 3 days (including today and already expired)
+  const attentionItems = data.filter(i => {
+    if (i.days_remaining != null) return Number(i.days_remaining) <= 3;
+    if (i.expiry_date) {
+      const d = new Date(i.expiry_date);
+      const now = new Date();
+      const diff = Math.ceil((d - new Date(now.getFullYear(), now.getMonth(), now.getDate())) / (1000*60*60*24));
+      return diff <= 3;
+    }
+    return false;
+  });
+  const attentionCount = attentionItems.length;
 
   // Update toast di halaman pantry
   const pantryToastTitle = document.querySelector('#page-pantry .toast.red .toast-title');
@@ -327,10 +338,10 @@ function updatePantryNotifications(items) {
 
   // Update subtext (list contoh item yang perlu perhatian)
   const pantryToastSub = document.querySelector('#page-pantry .toast.red .toast-sub');
-  if (pantryToastSub) {
+    if (pantryToastSub) {
     if (attentionCount > 0) {
-      const alertItems = data
-        .filter(i => ['expired','expires-today','soon','warning'].includes(i.status))
+      const alertItems = attentionItems
+        .slice() // copy
         .sort((a,b) => (a.days_remaining ?? 999) - (b.days_remaining ?? 999))
         .slice(0,3);
       const subText = alertItems.map(i => `${i.commodity} ${String(i.status_text).toLowerCase()}`).join(', ');
@@ -775,6 +786,7 @@ function updateStockTable(items) {
       <tr>
         <td>${escapeHtml(name)}</td>
         <td>${escapeHtml(qty)}</td>
+        <td>${item.purchase_price != null ? ('Rp ' + Number(item.purchase_price).toLocaleString('id-ID')) : '-'}</td>
         <td>
           <div style="display:flex;align-items:center;gap:8px">
             <div style="width:80px;height:5px;background:var(--bdr);border-radius:3px;overflow:hidden">
