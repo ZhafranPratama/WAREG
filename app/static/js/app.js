@@ -412,17 +412,22 @@ function loadPantryItems() {
         const statusLabel = item.status_text || 'Status tidak tersedia';
         const itemHTML = `
           <div class="pantry-card pantry-card-clickable" data-item-id="${item.item_id}">
-            <div class="p-head">
-              <span class="p-title">${item.commodity}</span>
-              <span class="badge badge-success">${item.quantity} ${item.unit}</span>
+            <div class="p-head" style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+              <div style="flex:1">
+                <span class="p-title">${item.commodity}</span>
+                <div style="font-size:12px;color:var(--text3)">${item.quantity} ${item.unit}</div>
+              </div>
+              <div style="display:flex;gap:8px;align-items:center">
+                <button class="btn btn-out btn-sm pantry-delete-btn" data-item-id="${item.item_id}" title="Hapus">Hapus</button>
+              </div>
             </div>
             <div class="p-body">
               <div class="p-info">Beli: <strong>${item.purchase_date}</strong></div>
+              <div class="p-info">Harga beli: <strong>${item.purchase_price ? ('Rp ' + Number(item.purchase_price).toLocaleString('id-ID')) : '-'}</strong></div>
               <div class="p-info">Kadaluarsa: <strong>${item.expiry_date || '-'}</strong></div>
             </div>
             <div class="p-info" style="margin-top: 10px; display:flex; justify-content:space-between; align-items:center;">
               <span class="tag ${statusClass}" style="padding: 4px 8px; font-size:12px;">${statusLabel}</span>
-              <span class="p-info" style="font-size:12px;color:var(--text3)">Klik untuk detail</span>
             </div>
           </div>
         `;
@@ -438,8 +443,114 @@ function loadPantryItems() {
               }
             });
       });
+      container.querySelectorAll('.pantry-delete-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const id = btn.getAttribute('data-item-id');
+          if (!id) return;
+          if (!confirm('Hapus bahan ini dari daftar? Tindakan ini tidak dapat dibatalkan.')) return;
+          deletePantryItem(id);
+        });
+      });
+      // Perbarui notifikasi/indikator dan tabel stok berdasarkan data pantry yang baru dimuat
+      try {
+        updatePantryNotifications(data);
+      } catch (err) {
+        console.warn('Gagal memperbarui notifikasi pantry:', err);
+      }
+      try {
+        updateStockTable(data);
+      } catch (err) {
+        console.warn('Gagal memperbarui tabel stok pantry:', err);
+      }
     })
     .catch(err => console.error("Gagal memuat list dapur:", err));
+}
+
+function updatePantryNotifications(items) {
+  const data = items || [];
+  // Attention only for items expiring within 3 days (including today and already expired)
+  const attentionItems = data.filter(i => {
+    if (i.days_remaining != null) return Number(i.days_remaining) <= 3;
+    if (i.expiry_date) {
+      const d = new Date(i.expiry_date);
+      const now = new Date();
+      const diff = Math.ceil((d - new Date(now.getFullYear(), now.getMonth(), now.getDate())) / (1000*60*60*24));
+      return diff <= 3;
+    }
+    return false;
+  });
+  const attentionCount = attentionItems.length;
+
+  // Update toast di halaman pantry
+  const pantryToastTitle = document.querySelector('#page-pantry .toast.red .toast-title');
+  if (pantryToastTitle) {
+    pantryToastTitle.textContent = attentionCount > 0 ? `${attentionCount} bahan perlu perhatian segera!` : 'Semua bahan aman';
+  }
+
+  // Update subtext (list contoh item yang perlu perhatian)
+  const pantryToastSub = document.querySelector('#page-pantry .toast.red .toast-sub');
+    if (pantryToastSub) {
+    if (attentionCount > 0) {
+      const alertItems = attentionItems
+        .slice() // copy
+        .sort((a,b) => (a.days_remaining ?? 999) - (b.days_remaining ?? 999))
+        .slice(0,3);
+      const subText = alertItems.map(i => `${i.commodity} ${String(i.status_text).toLowerCase()}`).join(', ');
+      pantryToastSub.textContent = subText || '';
+    } else {
+      pantryToastSub.textContent = '';
+    }
+  }
+
+  // Update dot notifikasi di topbar (tampilkan jumlah)
+  const notifDot = document.querySelector('.notif-dot');
+  if (notifDot) {
+    if (attentionCount > 0) {
+      notifDot.style.display = 'block';
+      notifDot.textContent = attentionCount > 9 ? '9+' : String(attentionCount);
+      notifDot.title = `${attentionCount} notifikasi peringatan kadaluarsa`;
+      notifDot.style.minWidth = '18px';
+      notifDot.style.height = '18px';
+      notifDot.style.padding = '0 5px';
+      notifDot.style.borderRadius = '9px';
+      notifDot.style.fontSize = '12px';
+      notifDot.style.lineHeight = '18px';
+      notifDot.style.textAlign = 'center';
+    } else {
+      notifDot.style.display = 'none';
+      notifDot.textContent = '';
+    }
+  }
+}
+
+async function deletePantryItem(itemId) {
+  try {
+    const res = await fetch(`/api/pantry/${itemId}`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        ...getAuthHeaders(),
+      },
+    });
+
+    // try parse json, otherwise get text for debugging
+    let result = {};
+    try { result = await res.json(); } catch(e) { result = { __raw: await res.text() }; }
+
+    if (!res.ok) {
+      const serverMsg = result.error || result.message || result.__raw || `HTTP ${res.status}`;
+      console.error('DELETE /api/pantry response:', res.status, result);
+      throw new Error(serverMsg || 'Gagal menghapus item');
+    }
+    alert('Item berhasil dihapus');
+    loadDashboardStats();
+    loadPantryItems();
+    loadPriceTrends();
+  } catch (err) {
+    console.error('deletePantryItem error:', err);
+    alert('Gagal menghapus item: ' + (err.message || err));
+  }
 }
 
 function formatRupiah(value) {
