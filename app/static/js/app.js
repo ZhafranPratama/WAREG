@@ -24,6 +24,9 @@ document.addEventListener('DOMContentLoaded', () => {
   animateBars();
   initChartHover();
   initSaveProfile();
+  if (typeof populateLocationSelect === 'function') {
+    populateLocationSelect('account-location');
+  }
 
   // Muat data user dari backend jika sudah login
   if (getToken()) {
@@ -87,7 +90,8 @@ function loadCurrentUser() {
       const accountProfileLocation = document.getElementById('account-profile-location');
       const accountNameInput = document.getElementById('account-name-input');
       const accountEmailInput = document.getElementById('account-email-input');
-      const accountLocationInput = document.getElementById('account-location-input');
+      const accountLocationInput = document.getElementById('account-location');
+      const accountLocationSelect = document.getElementById('account-location-select');
       const accountPersonaSelect = document.getElementById('account-persona-select');
 
       const initials = formatInitials(user.full_name);
@@ -101,7 +105,19 @@ function loadCurrentUser() {
       if (accountProfileLocation) accountProfileLocation.textContent = `📍 ${user.location_name || 'Jakarta Selatan'}`;
       if (accountNameInput) accountNameInput.value = user.full_name;
       if (accountEmailInput) accountEmailInput.value = user.email;
-      if (accountLocationInput) accountLocationInput.value = user.location_name || 'Jakarta Selatan';
+      if (accountLocationInput) {
+        if (typeof populateLocationSelect === 'function') {
+          populateLocationSelect('account-location', user.location_name || 'Jakarta Selatan');
+        } else {
+          accountLocationInput.value = user.location_name || 'Jakarta Selatan';
+        }
+      } else if (accountLocationSelect) {
+        if (typeof populateLocationSelect === 'function') {
+          populateLocationSelect('account-location', user.location_name || 'Jakarta Selatan');
+        } else {
+          accountLocationSelect.value = user.location_name || 'Jakarta Selatan';
+        }
+      }
       if (accountPersonaSelect) accountPersonaSelect.value = user.persona || 'other';
     })
     .catch(() => {
@@ -115,17 +131,18 @@ function loadCurrentUser() {
 async function saveProfile() {
   const accountNameInput = document.getElementById('account-name-input');
   const accountEmailInput = document.getElementById('account-email-input');
-  const accountLocationInput = document.getElementById('account-location-input');
+  const accountLocationInput = document.getElementById('account-location');
+  const accountLocationSelect = document.getElementById('account-location-select');
   const accountPersonaSelect = document.getElementById('account-persona-select');
 
-  if (!accountNameInput || !accountEmailInput || !accountLocationInput || !accountPersonaSelect) {
+  if (!accountNameInput || !accountEmailInput || !(accountLocationInput || accountLocationSelect) || !accountPersonaSelect) {
     return false;
   }
 
   const profileData = {
     full_name: accountNameInput.value.trim(),
     email: accountEmailInput.value.trim(),
-    location_name: accountLocationInput.value.trim(),
+    location_name: (accountLocationInput ? accountLocationInput.value : accountLocationSelect.value).trim(),
     persona: accountPersonaSelect.value,
   };
 
@@ -559,8 +576,16 @@ function loadPantryItems() {
       }
 
       if (data.length === 0) {
-        container.innerHTML = '<p style="padding: 20px; color: var(--text3); grid-column: 1/-1;">Dapur kosong. Masukkan bahan baru untuk mulai memantau stok.</p>';
-        return;
+          try {
+            updatePantryNotifications([]);
+          } catch (err) {
+            console.warn('Gagal memperbarui notifikasi pantry:', err);
+          }
+
+          container.innerHTML =
+            '<p style="padding: 20px; color: var(--text3); grid-column: 1/-1;">Dapur kosong. Masukkan bahan baru untuk mulai memantau stok.</p>';
+
+          return;
       }
 
       data.forEach(item => {
@@ -625,58 +650,98 @@ function loadPantryItems() {
 
 function updatePantryNotifications(items) {
   const data = items || [];
-  // Attention only for items expiring within 3 days (including today and already expired)
-  const attentionItems = data.filter(i => {
-    if (i.days_remaining != null) return Number(i.days_remaining) <= 3;
-    if (i.expiry_date) {
-      const d = new Date(i.expiry_date);
-      const now = new Date();
-      const diff = Math.ceil((d - new Date(now.getFullYear(), now.getMonth(), now.getDate())) / (1000*60*60*24));
-      return diff <= 3;
-    }
-    return false;
-  });
-  const attentionCount = attentionItems.length;
 
-  // Update toast di halaman pantry
-  const pantryToastTitle = document.querySelector('#page-pantry .toast.red .toast-title');
-  if (pantryToastTitle) {
-    pantryToastTitle.textContent = attentionCount > 0 ? `${attentionCount} bahan perlu perhatian segera!` : 'Semua bahan aman';
-  }
-
-  // Update subtext (list contoh item yang perlu perhatian)
-  const pantryToastSub = document.querySelector('#page-pantry .toast.red .toast-sub');
-    if (pantryToastSub) {
-    if (attentionCount > 0) {
-      const alertItems = attentionItems
-        .slice() // copy
-        .sort((a,b) => (a.days_remaining ?? 999) - (b.days_remaining ?? 999))
-        .slice(0,3);
-      const subText = alertItems.map(i => `${i.commodity} ${String(i.status_text).toLowerCase()}`).join(', ');
-      pantryToastSub.textContent = subText || '';
-    } else {
-      pantryToastSub.textContent = '';
-    }
-  }
-
-  // Update dot notifikasi di topbar (tampilkan jumlah)
+  const pantryToast = document.querySelector('.toast.red');
   const notifDot = document.querySelector('.notif-dot');
-  if (notifDot) {
-    if (attentionCount > 0) {
-      notifDot.style.display = 'block';
-      notifDot.textContent = attentionCount > 9 ? '9+' : String(attentionCount);
-      notifDot.title = `${attentionCount} notifikasi peringatan kadaluarsa`;
-      notifDot.style.minWidth = '18px';
-      notifDot.style.height = '18px';
-      notifDot.style.padding = '0 5px';
-      notifDot.style.borderRadius = '9px';
-      notifDot.style.fontSize = '12px';
-      notifDot.style.lineHeight = '18px';
-      notifDot.style.textAlign = 'center';
-    } else {
+
+  // Pantry kosong -> sembunyikan semua notifikasi
+  if (data.length === 0) {
+    if (pantryToast) {
+      pantryToast.style.display = 'none';
+    }
+
+    if (notifDot) {
       notifDot.style.display = 'none';
       notifDot.textContent = '';
     }
+
+    return;
+  }
+
+  // Cari item yang perlu perhatian (<= 3 hari atau sudah expired)
+  const attentionItems = data.filter(i => {
+    if (i.days_remaining != null) {
+      return Number(i.days_remaining) <= 3;
+    }
+
+    if (i.expiry_date) {
+      const d = new Date(i.expiry_date);
+      const now = new Date();
+      const diff = Math.ceil(
+        (d - new Date(now.getFullYear(), now.getMonth(), now.getDate())) /
+        (1000 * 60 * 60 * 24)
+      );
+
+      return diff <= 3;
+    }
+
+    return false;
+  });
+
+  const attentionCount = attentionItems.length;
+
+  // Semua bahan aman -> sembunyikan toast & notif
+  if (attentionCount === 0) {
+    if (pantryToast) {
+      pantryToast.style.display = 'none';
+    }
+
+    if (notifDot) {
+      notifDot.style.display = 'none';
+      notifDot.textContent = '';
+    }
+
+    return;
+  }
+
+  // Ada peringatan -> tampilkan toast
+  if (pantryToast) {
+    pantryToast.style.display = 'flex';
+  }
+
+  // Judul notifikasi
+  const pantryToastTitle = document.querySelector('.toast.red .toast-title');
+  if (pantryToastTitle) {
+    pantryToastTitle.textContent =
+      `${attentionCount} bahan perlu perhatian segera!`;
+  }
+
+  // Detail item yang perlu perhatian
+  const pantryToastSub = document.querySelector('.toast.red .toast-sub');
+  if (pantryToastSub) {
+    const alertItems = attentionItems
+      .slice()
+      .sort((a, b) => (a.days_remaining ?? 999) - (b.days_remaining ?? 999))
+      .slice(0, 3);
+
+    pantryToastSub.textContent = alertItems
+      .map(i => `${i.commodity} ${String(i.status_text).toLowerCase()}`)
+      .join(', ');
+  }
+
+  // Badge notifikasi di topbar
+  if (notifDot) {
+    notifDot.style.display = 'block';
+    notifDot.textContent = attentionCount > 9 ? '9+' : String(attentionCount);
+    notifDot.title = `${attentionCount} notifikasi peringatan kadaluarsa`;
+
+    notifDot.style.minWidth = '18px';
+    notifDot.style.height = '18px';
+    notifDot.style.padding = '0 5px';
+    notifDot.style.borderRadius = '9px';
+    notifDot.style.fontSize = '12px';
+    notifDot.style.lineHeight = '18px';
+    notifDot.style.textAlign = 'center';
   }
 }
 
@@ -703,6 +768,7 @@ async function deletePantryItem(itemId) {
     loadDashboardStats();
     loadPantryItems();
     loadPriceTrends();
+    window.location.reload();
   } catch (err) {
     console.error('deletePantryItem error:', err);
     alert('Gagal menghapus item: ' + (err.message || err));
@@ -1343,14 +1409,6 @@ function updateStockTable(items) {
         <td>${escapeHtml(name)}</td>
         <td>${escapeHtml(qty)}</td>
         <td>${item.purchase_price != null ? ('Rp ' + Number(item.purchase_price).toLocaleString('id-ID')) : '-'}</td>
-        <td>
-          <div style="display:flex;align-items:center;gap:8px">
-            <div style="width:80px;height:5px;background:var(--bdr);border-radius:3px;overflow:hidden">
-              <div style="width:${barWidth};height:100%;background:${pct != null ? (pct <= 20 ? 'var(--red)' : pct <= 50 ? '#F59E0B' : 'var(--g3)') : 'var(--g3)'};border-radius:3px"></div>
-            </div>
-            <span style="font-size:11px;color:${pct != null ? (pct <= 20 ? 'var(--red)' : pct <= 50 ? 'var(--amb)' : 'var(--g2)') : 'var(--text3)'};font-weight:600">${escapeHtml(pctLabel)}</span>
-          </div>
-        </td>
         <td style="${expiryLabel.includes('Hari ini') ? 'color:var(--red);font-weight:700' : ''}">${escapeHtml(expiryLabel)}</td>
         <td><span class="tag ${statusClass}">${escapeHtml(statusText)}</span></td>
       </tr>

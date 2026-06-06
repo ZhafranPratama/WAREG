@@ -18,13 +18,20 @@
         <input id="register-name" type="text" class="auth-input" placeholder="Nama Lengkap" required />
         <input id="register-email" type="email" class="auth-input" placeholder="Email" required />
         <input id="register-password" type="password" class="auth-input" placeholder="Password" required />
-        <input id="register-location" type="text" class="auth-input" placeholder="Lokasi Saat Ini" required />
-        <select id="register-persona" class="auth-input" required>
-          <option value="ibu rumah tangga">Ibu Rumah Tangga</option>
-          <option value="wirausaha">Wirausaha</option>
-          <option value="mahasiswa">Mahasiswa</option>
-          <option value="other">Other</option>
-        </select>
+        <div class="autocomplete">
+          <input id="register-location" class="auth-input" type="text" placeholder="Pilih Lokasi" autocomplete="off" required
+            aria-label="Lokasi" aria-controls="register-location-options" aria-expanded="false" aria-autocomplete="list" />
+          <div id="register-location-options" class="autocomplete-options" role="listbox"></div>
+        </div>
+        <div class="autocomplete">
+          <select id="register-persona" class="auth-input" required aria-label="Persona" aria-haspopup="listbox">
+            <option value="" disabled selected hidden>Pilih Persona</option>
+            <option value="ibu rumah tangga">Ibu Rumah Tangga</option>
+            <option value="wirausaha">Wirausaha</option>
+            <option value="mahasiswa">Mahasiswa</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
         <button type="submit" class="auth-btn">Daftar</button>
       </form>
 
@@ -33,12 +40,17 @@
     </div>
   </div>
 
+  <script src="{{ url_for('static', filename='js/locations.js') }}?v=20260606"></script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       const token = localStorage.getItem('wareg_token');
       if (token) {
         window.location.href = '/';
         return;
+      }
+
+      if (typeof populateLocationSelect === 'function') {
+        populateLocationSelect('register-location');
       }
 
       const form = document.getElementById('register-form');

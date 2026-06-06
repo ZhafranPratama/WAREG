@@ -884,6 +884,59 @@ tr:hover td { background: var(--bg); }
 .form-input:focus { border-color: var(--g3); }
 .form-select { appearance: none; }
 
+.autocomplete {
+  position: relative;
+}
+.autocomplete::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: 14px;
+  transform: translateY(-50%);
+  width: 12px;
+  height: 12px;
+  pointer-events: none;
+  color: var(--text3);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath fill='none' stroke='currentColor' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M6 7l4 4 4-4'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-size: contain;
+}
+.autocomplete input {
+  padding-right: 38px;
+  color: var(--text);
+  font-weight: 400;
+}
+.autocomplete input::placeholder {
+  color: var(--text3);
+  opacity: 1;
+  font-weight: 400;
+}
+.autocomplete-options {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  z-index: 20;
+  max-height: 220px;
+  overflow-y: auto;
+  border: 1px solid var(--bdr);
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.1);
+}
+.autocomplete-option {
+  padding: 12px 14px;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--text);
+  border-bottom: 1px solid var(--bdr);
+}
+.autocomplete-option:last-child { border-bottom: none; }
+.autocomplete-option:hover,
+.autocomplete-option.active {
+  background: var(--bg);
+}
+
 .auth-shell {
   min-height: 100vh;
   display: flex;
@@ -899,6 +952,8 @@ tr:hover td { background: var(--bg); }
   border-radius: 24px;
   box-shadow: 0 30px 80px rgba(15, 23, 42, 0.08);
   padding: 36px;
+  overflow: visible;
+  position: relative;
 }
 .auth-brand {
   display: inline-flex;
@@ -923,7 +978,93 @@ tr:hover td { background: var(--bg); }
   font-size: 14px;
   margin-top: 12px;
 }
+.auth-input::placeholder {
+  color: var(--text3);
+}
 .auth-input:focus { border-color: var(--g3); outline: none; }
+
+.auth-shell .autocomplete {
+  position: relative;
+  margin-top: 12px;
+  overflow: visible;
+}
+.auth-shell .autocomplete input,
+.auth-shell .autocomplete select {
+  display: block;
+  width: 100%;
+  margin: 0;
+  padding: 14px 16px;
+  line-height: 1.5;
+  border: 1px solid var(--bdr2) !important;
+  border-radius: 14px;
+  outline: none;
+  background: #fff;
+  box-shadow: none !important;
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 400;
+}
+
+.auth-shell .autocomplete input:focus,
+.auth-shell .autocomplete select:focus {
+  border-color: var(--g3) !important;
+}
+
+.auth-shell .autocomplete select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  padding-right: 38px;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.auth-shell .autocomplete select:invalid {
+  color: var(--text3);
+}
+
+.auth-shell .autocomplete select option[disabled],
+.auth-shell .autocomplete select option[value=""] {
+  color: var(--text3);
+}
+
+/* Make the chevron in auth forms use muted color (not white) */
+.auth-shell .autocomplete::after { color: var(--text3); }
+
+/* Hide IE/Edge native dropdown arrow */
+.auth-shell .autocomplete select::-ms-expand { display: none; }
+.auth-shell .autocomplete-options {
+  display: none;
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  z-index: 20;
+  max-height: 180px;
+  overflow-y: auto;
+  border: 1px solid var(--bdr);
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.1);
+}
+.auth-shell .autocomplete-options.active { display: block; }
+
+/* Remove thin separator line between stacked auth inputs (fix visual gap) */
+.auth-shell .autocomplete { margin-top: 12px; margin-bottom: 0; }
+.auth-shell .autocomplete + .autocomplete { margin-top: 12px; }
+.auth-shell .autocomplete-option {
+  padding: 10px 16px;
+  cursor: pointer;
+  font-size: 14px;
+  color: var(--text);
+  border-bottom: 1px solid var(--bdr);
+}
+.auth-shell .autocomplete-option:last-child { border-bottom: none; }
+.auth-shell .autocomplete-option:hover,
+.auth-shell .autocomplete-option.active {
+  background: var(--bg);
+}
+
 .auth-btn {
   width: 100%;
   padding: 14px 16px;

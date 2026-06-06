@@ -593,8 +593,8 @@
             <circle cx="7.5" cy="11.5" r="0.7" fill="currentColor"/>
           </svg>
           <div>
-            <div class="toast-title">2 bahan perlu perhatian segera!</div>
-            <div class="toast-sub">Mentega kadaluarsa hari ini, Roti Tawar 2 hari lagi.</div>
+            <div class="toast-title"></div>
+            <div class="toast-sub"></div>
           </div>
         </div>
 
@@ -714,13 +714,13 @@
             <button class="btn btn-g btn-sm add-kitchen-btn">+</button>
           </div>
               <div class="card-body" style="padding:0">
-            <table>
-              <thead><tr><th>Bahan</th><th>Jumlah</th><th>Harga Beli</th><th>Sisa Stok</th><th>Kadaluarsa</th><th>Status</th></tr></thead>
-              <tbody id="stock-table-body">
-                <tr><td colspan="5" style="padding:16px;color:var(--text3);text-align:center">Memuat data stok...</td></tr>
-              </tbody>
-            </table>
-          </div>
+              <table>
+                <thead><tr><th>Bahan</th><th>Jumlah</th><th>Harga Beli</th><th>Kadaluarsa</th><th>Status</th></tr></thead>
+                <tbody id="stock-table-body">
+                  <tr><td colspan="5" style="padding:16px;color:var(--text3);text-align:center">Memuat data stok...</td></tr>
+                </tbody>
+              </table>
+            </div>
         </div>
       </div><!-- /page-pantry -->
 
@@ -887,11 +887,16 @@
                 </div>
                 <div class="form-group">
                   <label class="form-label">Lokasi</label>
-                  <input id="account-location-input" class="form-input" value="Jakarta Selatan" type="text" />
+                  <div class="autocomplete">
+                    <input id="account-location" class="form-input" type="text" placeholder="Pilih Lokasi" autocomplete="off"
+                      aria-label="Lokasi" aria-controls="account-location-options" aria-expanded="false" aria-autocomplete="list" />
+                    <div id="account-location-options" class="autocomplete-options" role="listbox"></div>
+                  </div>
                 </div>
                 <div class="form-group">
                   <label class="form-label">Persona</label>
-                  <select id="account-persona-select" class="form-input form-select">
+                  <select id="account-persona-select" class="form-input form-select" aria-label="Persona">
+                    <option value="" disabled selected hidden>Pilih Persona</option>
                     <option value="ibu rumah tangga">Ibu Rumah Tangga</option>
                     <option value="wirausaha">Wirausaha</option>
                     <option value="mahasiswa">Mahasiswa</option>
@@ -916,32 +921,6 @@
               </div>
             </div>
 
-            <div class="card">
-              <div class="card-head"><span class="card-title">Notifikasi</span></div>
-              <div class="card-body">
-                <div class="notif-row">
-                  <div>
-                    <div class="notif-row-label">Peringatan kadaluarsa</div>
-                    <div class="notif-row-sub">Notif H-2 sebelum kadaluarsa</div>
-                  </div>
-                  <div class="toggle-wrap on"><div class="toggle-knob"></div></div>
-                </div>
-                <div class="notif-row">
-                  <div>
-                    <div class="notif-row-label">Prediksi harga turun</div>
-                    <div class="notif-row-sub">Notif saat ada penurunan &gt;10%</div>
-                  </div>
-                  <div class="toggle-wrap on"><div class="toggle-knob"></div></div>
-                </div>
-                <div class="notif-row">
-                  <div>
-                    <div class="notif-row-label">Update grup beli bareng</div>
-                    <div class="notif-row-sub">Notif saat ada peserta baru</div>
-                  </div>
-                  <div class="toggle-wrap off"><div class="toggle-knob"></div></div>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
       </div><!-- /page-account -->
@@ -950,6 +929,7 @@
   </div><!-- /main -->
 </div><!-- /shell -->
 
+<script src="{{ url_for('static', filename='js/locations.js') }}?v=20260606"></script>
 <script src="{{ url_for('static', filename='js/app.js') }}?v=20260523-price-predictor"></script>
 </body>
 </html>
