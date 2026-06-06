@@ -50,11 +50,11 @@ def get_market_comparison():
             if region_name:
                 filtered = df[
                     (df['admin2'].fillna('National').astype(str) == region_name) &
-                    (df['commodity_name'].str.contains(commodity, case=False, na=False))
+                    (df['commodity_name'].str.contains(commodity, case=False, na=False, regex=False))
                 ]
             else:
                 # fallback: filter by commodity only when region mapping is missing
-                filtered = df[(df['commodity_name'].str.contains(commodity, case=False, na=False))]
+                filtered = df[(df['commodity_name'].str.contains(commodity, case=False, na=False, regex=False))]
 
             if filtered.empty:
                 if region_name:

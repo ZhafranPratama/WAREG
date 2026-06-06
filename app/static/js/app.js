@@ -723,12 +723,10 @@ function loadMarketComparison() {
       let html = '<div style="display:grid;gap:12px">';
       items.slice(0, 4).forEach(item => {
         const price = item.predicted_price ? Number(item.predicted_price).toLocaleString('id-ID') : '--';
-        const distance = item.distance ? item.distance.toFixed(1) : '--';
         html += `
           <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px;background:rgba(255,255,255,0.04);border-radius:14px">
             <div>
               <div style="font-size:14px;font-weight:700;color:var(--text)">${item.market}</div>
-              <div style="font-size:12px;color:var(--text3)">Jarak ${distance} km</div>
             </div>
             <div style="font-size:14px;font-weight:700;color:var(--g2)">Rp ${price}</div>
           </div>`;
