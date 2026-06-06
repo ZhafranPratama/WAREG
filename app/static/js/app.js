@@ -217,7 +217,7 @@ function renderTrendCharts(selectedCommodity) {
     selectEl.value = selected;
   }
 
-  const charts = priceTrendCache.map(item => {
+  const charts = priceTrendCache.filter(item => item.commodity_name === selected).map(item => {
     const history = item.records.slice(-10);
 
     if (!history.length) {
@@ -234,19 +234,23 @@ function renderTrendCharts(selectedCommodity) {
     const maxPrice = Math.max(...prices);
     const avgPrice = prices.reduce((sum, value) => sum + value, 0) / prices.length;
 
-    const bars = history.map(record => {
+    const bars = history.map((record, index) => {
       const height = maxPrice === minPrice ? 50 : ((record.price_value - minPrice) / (maxPrice - minPrice)) * 80 + 10;
       const label = formatTrendDate(record.recorded_date);
       return `<div class="lc-bar" title="${label}: Rp ${Number(record.price_value).toLocaleString('id-ID')}" style="height:${height}%"></div>`;
     }).join('');
 
-    const labels = history.map(record => `<span class="lc-lbl">${formatTrendDate(record.recorded_date)}</span>`).join('');
+    const labels = history.map((record, index) => {
+      const offsetFromToday = history.length - 1 - index;
+      const labelText = offsetFromToday === 0 ? 'Hari ini' : `H-${offsetFromToday}`;
+      return `<span class="lc-lbl">${labelText}</span>`;
+    }).join('');
     const trendColor = item.trend === 'up' ? 'var(--red)' : item.trend === 'down' ? 'var(--g2)' : 'var(--text3)';
     const trendBadge = item.trend === 'up' ? 'pill-buy' : item.trend === 'down' ? 'pill-wait' : 'pill-watch';
     const changeText = item.percentage !== 0 ? `${item.percentage > 0 ? '+' : ''}${item.percentage.toFixed(1)}%` : '0.0%';
 
     return `
-      <div class="trend-area trend-chart-card ${item.commodity_name === selected ? 'is-selected' : ''}">
+      <div class="trend-area trend-chart-card">
         <div class="card-title" style="margin-bottom:8px">${item.commodity_name}</div>
         <div class="trend-chart-meta">
           <span>${item.source} • ${item.latestDate}</span>
@@ -312,22 +316,28 @@ function loadPriceTrends() {
           .sort((a, b) => new Date(a.recorded_date) - new Date(b.recorded_date));
 
         const latest = sortedRecords[sortedRecords.length - 1];
-        const previous = sortedRecords[sortedRecords.length - 2];
         const currentPrice = latest?.price_value ?? 0;
+        
+        // Calculate average price
+        const avgPrice = sortedRecords.length > 0 
+          ? sortedRecords.reduce((sum, r) => sum + Number(r.price_value), 0) / sortedRecords.length 
+          : 0;
 
+        // Determine trend and percentage based on current price vs average
         let percentage = 0;
         let trend = 'steady';
         let trendLabel = 'Stabil';
 
-        if (previous && previous.price_value !== 0) {
-          percentage = ((currentPrice - previous.price_value) / previous.price_value) * 100;
-          trend = percentage > 0 ? 'up' : percentage < 0 ? 'down' : 'steady';
+        if (avgPrice !== 0) {
+          percentage = ((currentPrice - avgPrice) / avgPrice) * 100;
+          trend = percentage > 1 ? 'up' : percentage < -1 ? 'down' : 'steady';
           trendLabel = trend === 'up' ? 'Naik' : trend === 'down' ? 'Turun' : 'Stabil';
         }
 
         return {
           commodity_name,
           currentPrice,
+          avgPrice,
           percentage,
           trend,
           trendLabel,
@@ -339,25 +349,22 @@ function loadPriceTrends() {
 
       priceTrendCache = commodityRows;
 
-      const maxPrice = Math.max(...commodityRows.map(item => item.currentPrice), 1);
-
       commodityRows.forEach(item => {
-        const barWidth = Math.min((item.currentPrice / maxPrice) * 100, 100);
         const trendColor = item.trend === 'up' ? 'var(--red)' : item.trend === 'down' ? 'var(--g2)' : 'var(--text3)';
-        const trendBadge = item.trend === 'up' ? 'pill-buy' : item.trend === 'down' ? 'pill-wait' : 'pill-watch';
+        const trendBadge = item.trend === 'up' ? 'pill-wait' : item.trend === 'down' ? 'pill-buy' : 'pill-watch';
 
         const trendHTML = `
           <div class="trend-item">
-            <div class="trend-name">
-              <strong>${item.commodity_name}</strong>
-              <span class="trend-meta">${item.source} • ${item.latestDate}</span>
+            <div class="trend-item-header">
+              <div class="trend-item-left">
+                <strong class="trend-name">${item.commodity_name}</strong>
+                <span class="trend-meta">${item.source} • ${item.latestDate}</span>
+              </div>
+              <span class="pred-pill ${trendBadge}">${item.trendLabel} ${item.percentage !== 0 ? `${item.percentage > 0 ? '+' : ''}${item.percentage.toFixed(1)}%` : '0.0%'}</span>
             </div>
-            <div class="trend-graph">
-              <div class="tg-bar" style="width: ${barWidth}%; background: ${trendColor};"></div>
-            </div>
-            <div class="trend-val">
-              <span class="t-current">Rp ${Number(item.currentPrice).toLocaleString('id-ID')}</span>
-              <span class="pred-pill ${trendBadge}" style="margin-top: 6px;">${item.trendLabel} ${item.percentage !== 0 ? `${item.percentage > 0 ? '+' : ''}${item.percentage.toFixed(1)}%` : '0.0%'}</span>
+            <div class="trend-item-price">
+              <span class="trend-price-current">Rp ${Number(item.currentPrice).toLocaleString('id-ID')}</span>
+              <span class="trend-price-avg">rata: Rp ${Number(item.avgPrice).toLocaleString('id-ID')}</span>
             </div>
           </div>
         `;
@@ -517,7 +524,7 @@ function buildFallbackForecast(name, records = []) {
     predicted_price: predictedPrice,
     trend,
     percentage,
-    recommendation: trend === 'up' ? 'Beli sekarang' : trend === 'down' ? 'Tunda pembelian' : 'Pantau harga',
+    recommendation: trend === 'up' ? 'Tunda pembelian' : trend === 'down' ? 'Beli sekarang' : 'Pantau harga',
     sourceLabel: 'Trend lokal',
     isAi: false,
     series: buildDailySeries(latestPrice, predictedPrice),
@@ -527,7 +534,7 @@ function buildFallbackForecast(name, records = []) {
 function buildForecastSummaryCardMarkup(item) {
   const trendColor = item.trend === 'down' ? 'var(--g2)' : item.trend === 'up' ? 'var(--red)' : 'var(--text3)';
   const trendLabel = item.trend === 'down' ? 'Turun' : item.trend === 'up' ? 'Naik' : 'Stabil';
-  const trendBadge = item.trend === 'up' ? 'pill-buy' : item.trend === 'down' ? 'pill-wait' : 'pill-watch';
+  const trendBadge = item.trend === 'up' ? 'pill-wait' : item.trend === 'down' ? 'pill-buy' : 'pill-watch';
   const changeText = item.percentage !== 0 ? `${item.trend === 'up' ? '+' : '-'}${item.percentage}%` : '0%';
 
   return `
@@ -560,7 +567,7 @@ function buildForecastSummaryCardMarkup(item) {
 function buildForecastChartCardMarkup(item) {
   const trendColor = item.trend === 'down' ? 'var(--g2)' : item.trend === 'up' ? 'var(--red)' : 'var(--text3)';
   const trendLabel = item.trend === 'down' ? 'Turun' : item.trend === 'up' ? 'Naik' : 'Stabil';
-  const trendBadge = item.trend === 'up' ? 'pill-buy' : item.trend === 'down' ? 'pill-wait' : 'pill-watch';
+  const trendBadge = item.trend === 'up' ? 'pill-wait' : item.trend === 'down' ? 'pill-buy' : 'pill-watch';
   const changeText = item.percentage !== 0 ? `${item.trend === 'up' ? '+' : '-'}${item.percentage}%` : '0%';
   const minPrice = Math.min(...item.series);
   const maxPrice = Math.max(...item.series);
@@ -657,7 +664,7 @@ async function loadPriceForecast() {
           predicted_price: predictedPrice,
           trend,
           percentage,
-          recommendation: payload.recommendation || (trend === 'up' ? 'Beli sekarang' : trend === 'down' ? 'Tunda pembelian' : 'Pantau harga'),
+          recommendation: payload.recommendation || (trend === 'up' ? 'Tunda pembelian' : trend === 'down' ? 'Beli sekarang' : 'Pantau harga'),
           sourceLabel: 'Backend AI',
           isAi: true,
           series: buildDailySeries(currentPrice, predictedPrice),

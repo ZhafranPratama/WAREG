@@ -30,14 +30,6 @@
         Dashboard
       </button>
 
-      <button class="sb-item" onclick="nav('predictor', this)">
-        <svg viewBox="0 0 16 16" fill="none">
-          <polyline points="1,13 5,7 9,10 15,3" stroke="currentColor" stroke-width="1.8"
-            stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-        Price Predictor
-      </button>
-
       <button class="sb-item" onclick="nav('map', this)">
         <svg viewBox="0 0 16 16" fill="none">
           <circle cx="8" cy="7" r="2.5" stroke="currentColor" stroke-width="1.5"/>
@@ -77,6 +69,14 @@
           <path d="M8 5v3.5l2.5 1.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
         </svg>
         Purchase History
+      </button>
+
+      <button class="sb-item" onclick="nav('predictor', this)">
+        <svg viewBox="0 0 16 16" fill="none">
+          <polyline points="1,13 5,7 9,10 15,3" stroke="currentColor" stroke-width="1.8"
+            stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Price Predictor
       </button>
 
       <button class="sb-item" onclick="nav('trends', this)">
@@ -270,65 +270,6 @@
                   AI Price Predictor
                 </span>
                 <span class="tag tag-green">AI Aktif</span>
-              </div>
-              <div class="card-body">
-                <div class="pred-item">
-                  <div class="pred-icon">🌶️</div>
-                  <div class="pred-info">
-                    <div class="pred-name">Cabai Merah</div>
-                    <div class="pred-now">Rp 85.000 → Rp 67.000</div>
-                    <div class="mini-chart">
-                      <div class="bar" style="height:85%;background:#9CA3AF"></div>
-                      <div class="bar" style="height:72%;background:#9CA3AF"></div>
-                      <div class="bar" style="height:100%;background:var(--g3)"></div>
-                      <div class="bar" style="height:78%;background:#D1D5DB"></div>
-                      <div class="bar" style="height:82%;background:#D1D5DB"></div>
-                    </div>
-                  </div>
-                  <div class="pred-right">
-                    <div class="pred-pct" style="color:var(--g2)">-21%</div>
-                    <div class="pred-days">dalam 2 hari</div>
-                    <div class="pred-pill pill-wait">⏳ Delay Purchase</div>
-                  </div>
-                </div>
-                <div class="pred-item">
-                  <div class="pred-icon">🧄</div>
-                  <div class="pred-info">
-                    <div class="pred-name">Bawang Putih</div>
-                    <div class="pred-now">Rp 42.000 → Rp 39.000</div>
-                    <div class="mini-chart">
-                      <div class="bar" style="height:100%;background:#9CA3AF"></div>
-                      <div class="bar" style="height:90%;background:var(--g3)"></div>
-                      <div class="bar" style="height:93%;background:#D1D5DB"></div>
-                      <div class="bar" style="height:95%;background:#D1D5DB"></div>
-                      <div class="bar" style="height:92%;background:#D1D5DB"></div>
-                    </div>
-                  </div>
-                  <div class="pred-right">
-                    <div class="pred-pct" style="color:var(--g2)">-7%</div>
-                    <div class="pred-days">dalam 1 hari</div>
-                    <div class="pred-pill pill-watch">👁 Keep Watching</div>
-                  </div>
-                </div>
-                <div class="pred-item" style="margin-bottom:0">
-                  <div class="pred-icon">🍅</div>
-                  <div class="pred-info">
-                    <div class="pred-name">Tomat</div>
-                    <div class="pred-now">Rp 12.000 → Rp 16.000</div>
-                    <div class="mini-chart">
-                      <div class="bar" style="height:60%;background:#9CA3AF"></div>
-                      <div class="bar" style="height:65%;background:#9CA3AF"></div>
-                      <div class="bar" style="height:75%;background:#D1D5DB"></div>
-                      <div class="bar" style="height:90%;background:#D1D5DB"></div>
-                      <div class="bar" style="height:100%;background:#D1D5DB"></div>
-                    </div>
-                  </div>
-                  <div class="pred-right">
-                    <div class="pred-pct" style="color:var(--red)">+33%</div>
-                    <div class="pred-days">dalam 0 hari</div>
-                    <div class="pred-pill pill-buy">🛒 Buy Now</div>
-                  </div>
-                </div>
               </div>
             </div>
 
@@ -564,75 +505,6 @@
             <p style="padding:16px;color:var(--text3);margin:0">
               Memuat grafik prediksi per komoditas...
             </p>
-          </div>
-        </div>
-
-        <div class="grid3">
-          <div class="card">
-            <div class="card-head">
-              <span class="card-title">🌶️ Cabai Merah</span>
-              <span class="pred-pill pill-wait">Delay</span>
-            </div>
-            <div class="card-body">
-              <div style="font-size:20px;font-weight:700;color:var(--g2)">-21%</div>
-              <div style="font-size:11px;color:var(--text3);margin-bottom:10px">Rp 85.000 → Rp 67.000 dalam 2 hari</div>
-              <div class="line-chart">
-                <div class="lc-bar" style="height:85%"></div>
-                <div class="lc-bar" style="height:72%"></div>
-                <div class="lc-bar" style="height:100%;background:var(--g2);opacity:1"></div>
-                <div class="lc-bar" style="height:78%"></div>
-                <div class="lc-bar" style="height:82%"></div>
-              </div>
-              <div class="lc-labels">
-                <div class="lc-lbl">Hari ini</div><div class="lc-lbl">D+1</div>
-                <div class="lc-lbl">D+2</div><div class="lc-lbl">D+3</div><div class="lc-lbl">D+4</div>
-              </div>
-              <button class="btn btn-y" style="width:100%;justify-content:center;margin-top:10px">⏳ Delay Purchase</button>
-            </div>
-          </div>
-          <div class="card">
-            <div class="card-head">
-              <span class="card-title">🧄 Bawang Putih</span>
-              <span class="pred-pill pill-watch">Watch</span>
-            </div>
-            <div class="card-body">
-              <div style="font-size:20px;font-weight:700;color:var(--g2)">-7%</div>
-              <div style="font-size:11px;color:var(--text3);margin-bottom:10px">Rp 42.000 → Rp 39.000 dalam 1 hari</div>
-              <div class="line-chart">
-                <div class="lc-bar" style="height:100%"></div>
-                <div class="lc-bar" style="height:90%;background:var(--g2);opacity:1"></div>
-                <div class="lc-bar" style="height:93%"></div>
-                <div class="lc-bar" style="height:95%"></div>
-                <div class="lc-bar" style="height:92%"></div>
-              </div>
-              <div class="lc-labels">
-                <div class="lc-lbl">Hari ini</div><div class="lc-lbl">D+1</div>
-                <div class="lc-lbl">D+2</div><div class="lc-lbl">D+3</div><div class="lc-lbl">D+4</div>
-              </div>
-              <button class="btn btn-out" style="width:100%;justify-content:center;margin-top:10px">👁 Keep Watching</button>
-            </div>
-          </div>
-          <div class="card">
-            <div class="card-head">
-              <span class="card-title">🍅 Tomat</span>
-              <span class="pred-pill pill-buy">Buy!</span>
-            </div>
-            <div class="card-body">
-              <div style="font-size:20px;font-weight:700;color:var(--red)">+33%</div>
-              <div style="font-size:11px;color:var(--text3);margin-bottom:10px">Rp 12.000 → Rp 16.000 hari ini</div>
-              <div class="line-chart">
-                <div class="lc-bar" style="height:60%"></div>
-                <div class="lc-bar" style="height:65%"></div>
-                <div class="lc-bar" style="height:75%"></div>
-                <div class="lc-bar" style="height:90%"></div>
-                <div class="lc-bar" style="height:100%;background:#DC2626;opacity:0.7"></div>
-              </div>
-              <div class="lc-labels">
-                <div class="lc-lbl">Hari ini</div><div class="lc-lbl">D+1</div>
-                <div class="lc-lbl">D+2</div><div class="lc-lbl">D+3</div><div class="lc-lbl">D+4</div>
-              </div>
-              <button class="btn btn-g" style="width:100%;justify-content:center;margin-top:10px">🛒 Buy Now</button>
-            </div>
           </div>
         </div>
 

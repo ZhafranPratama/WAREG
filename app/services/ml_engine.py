@@ -251,7 +251,7 @@ class PriceAnalyticsEngine:
                 trend = 'up' if predicted_price > current_price else 'down' if predicted_price < current_price else 'steady'
                 percentage = int(round(abs(predicted_price - current_price) / current_price * 100))
 
-            recommendation = 'Beli sekarang' if trend == 'up' else 'Tunda pembelian' if trend == 'down' else 'Pantau harga'
+            recommendation = 'Tunda pembelian' if trend == 'up' else 'Beli sekarang' if trend == 'down' else 'Pantau harga'
             return {
                 'commodity': commodity,
                 'current_price': round(current_price, 2),
