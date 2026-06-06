@@ -594,7 +594,7 @@
           </svg>
           <div>
             <div class="toast-title">2 bahan perlu perhatian segera!</div>
-            Mentega kadaluarsa hari ini, Roti Tawar 2 hari lagi.
+            <div class="toast-sub">Mentega kadaluarsa hari ini, Roti Tawar 2 hari lagi.</div>
           </div>
         </div>
 
@@ -662,14 +662,16 @@
                   </div>
                   <div class="form-group">
                     <label class="form-label">Harga Beli (opsional)</label>
-                    <input
-                      id="input-purchase-price"
-                      class="form-input"
-                      type="number"
-                      placeholder="cth: 45000"
-                      min="0"
-                      step="0.01"
-                    />
+                    <div style="display:flex;align-items:center;gap:8px">
+                      <span style="padding:8px 10px;background:rgba(255,255,255,0.03);border-radius:8px;color:var(--text3)">Rp</span>
+                      <input
+                        id="input-purchase-price"
+                        class="form-input"
+                        type="text"
+                        placeholder="cth: 45000"
+                        style="flex:1"
+                      />
+                    </div>
                   </div>
                   <button type="submit" class="btn btn-g" style="width:100%;justify-content:center;margin-top:4px">
                     💾 Tambah Bahan Dapur
@@ -684,14 +686,13 @@
             <div class="card">
               <div class="card-head">
                 <span class="card-title">📦 Daftar Bahan Dapur</span>
-                <span class="tag tag-blue">Live dari DB</span>
               </div>
               <div class="card-body">
                 <!--
                   ✦ DINAMIS: diisi oleh loadPantryItems() via API /api/pantry
                   Konten di sini akan di-replace otomatis dengan data bahan dapur kamu
                 -->
-                <div id="pantry-items-container" style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+                <div id="pantry-items-container" style="display:grid;grid-template-columns:1fr;gap:10px">
                   <p style="padding:20px;color:var(--text3);grid-column:1/-1">
                     <span style="display:block;text-align:center;font-size:24px;margin-bottom:8px">⏳</span>
                     Memuat data bahan dapur...
@@ -706,7 +707,21 @@
           </div>
         </div>
 
-        <!-- Static example table removed — pantry list intentionally empty by default -->
+        <!-- Tabel stok bahan (data statis sebagai referensi) -->
+        <div class="card">
+          <div class="card-head">
+            <span class="card-title">🍳 Stok Bahan Dapur</span>
+            <button class="btn btn-g btn-sm add-kitchen-btn">+</button>
+          </div>
+              <div class="card-body" style="padding:0">
+            <table>
+              <thead><tr><th>Bahan</th><th>Jumlah</th><th>Harga Beli</th><th>Sisa Stok</th><th>Kadaluarsa</th><th>Status</th></tr></thead>
+              <tbody id="stock-table-body">
+                <tr><td colspan="5" style="padding:16px;color:var(--text3);text-align:center">Memuat data stok...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div><!-- /page-pantry -->
 
 

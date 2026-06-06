@@ -916,7 +916,10 @@ function handlePantryForm() {
     const unit = document.getElementById('input-comm-unit').value.trim();
     const purchaseDate = document.getElementById('input-purchase-date').value;
     const expiryDate = document.getElementById('input-expiry-date').value;
-    const purchasePrice = document.getElementById('input-purchase-price').value;
+    const rawPrice = document.getElementById('input-purchase-price').value || '';
+    // sanitize price: allow users to type with or without separators and optional 'Rp'
+    const digitsOnly = rawPrice.replace(/[^0-9]/g, '');
+    const purchasePrice = digitsOnly ? parseFloat(digitsOnly) : null;
 
     const payload = {
       commodity_name: name,
@@ -924,7 +927,7 @@ function handlePantryForm() {
       unit: unit || 'pcs',
       purchase_date: purchaseDate,
       expiry_date: expiryDate || null,
-      purchase_price: purchasePrice ? parseFloat(purchasePrice) : null,
+      purchase_price: purchasePrice != null ? purchasePrice : null,
     };
 
     fetch('/api/pantry', {
