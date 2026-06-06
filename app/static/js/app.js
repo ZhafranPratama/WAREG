@@ -382,6 +382,162 @@ function loadPriceTrends() {
     .catch(err => console.error("Gagal memuat visualisasi tren harga:", err));
 }
 
+function formatRupiah(value) {
+  if (value === null || value === undefined || Number.isNaN(Number(value))) {
+    return '--';
+  }
+  return Number(value).toLocaleString('id-ID');
+}
+
+function getDisplayCommodityName(name) {
+  if (!name) return 'Komoditas';
+
+  const normalized = String(name).toLowerCase();
+  if (normalized.includes('cabai') || normalized.includes('chili')) return 'Cabai Merah';
+  if (normalized.includes('bawang') || normalized.includes('garlic')) return 'Bawang Putih';
+  if (normalized.includes('tomat') || normalized.includes('tomato')) return 'Tomat';
+  if (normalized.includes('beras') || normalized.includes('rice')) return 'Beras';
+  if (normalized.includes('telur') || normalized.includes('egg')) return 'Telur';
+  if (normalized.includes('daging') || normalized.includes('beef') || normalized.includes('meat')) return 'Daging Sapi';
+  if (normalized.includes('minyak') || normalized.includes('oil')) return 'Minyak Sayur';
+  if (normalized.includes('gula') || normalized.includes('sugar')) return 'Gula';
+  return String(name);
+}
+
+function getForecastAlias(name) {
+  if (!name) return null;
+
+  const normalized = String(name).toLowerCase();
+  if (normalized.includes('cabai') || normalized.includes('chili')) return 'Chili (Red)';
+  if (normalized.includes('beras') || normalized.includes('rice')) return 'Rice';
+  if (normalized.includes('telur') || normalized.includes('egg')) return 'Eggs';
+  if (normalized.includes('daging') || normalized.includes('beef') || normalized.includes('meat')) return 'Meat (Beef)';
+  if (normalized.includes('minyak') || normalized.includes('oil')) return 'Oil (Vegetable)';
+  if (normalized.includes('gula') || normalized.includes('sugar')) return 'Sugar';
+  return null;
+}
+
+function buildDailySeries(currentPrice, predictedPrice) {
+  const current = Number(currentPrice) || 0;
+  const target = Number(predictedPrice) || current;
+  const step = (target - current) / 4;
+
+  return Array.from({ length: 5 }, (_, index) => Math.max(0, current + step * index));
+}
+
+function sortHistory(records = []) {
+  return records
+    .slice()
+    .filter(record => Number.isFinite(Number(record.price_value)))
+    .sort((a, b) => new Date(a.recorded_date) - new Date(b.recorded_date));
+}
+
+function getSafeForecastValues(records = [], payload = {}) {
+  const sortedRecords = sortHistory(records);
+  const latestPrice = sortedRecords.length > 0 ? Number(sortedRecords[sortedRecords.length - 1].price_value) : 0;
+  const previousPrice = sortedRecords.length > 1 ? Number(sortedRecords[sortedRecords.length - 2].price_value) : latestPrice;
+  const currentPrice = Number(payload.current_price) > 0 ? Number(payload.current_price) : latestPrice;
+  const predictedPrice = Number(payload.predicted_price) > 0 ? Number(payload.predicted_price) : currentPrice;
+  const trendDelta = sortedRecords.length > 1 ? (latestPrice - previousPrice) / Math.max(sortedRecords.length - 1, 1) : 0;
+  const fallbackPredicted = latestPrice + trendDelta * 4;
+  const safePredicted = Number.isFinite(predictedPrice) && predictedPrice > 0 ? predictedPrice : fallbackPredicted;
+
+  return {
+    currentPrice,
+    predictedPrice: safePredicted,
+    trendDelta,
+  };
+}
+
+function buildFallbackForecast(name, records = []) {
+  const sortedRecords = sortHistory(records);
+  const latestPrice = sortedRecords.length > 0 ? Number(sortedRecords[sortedRecords.length - 1].price_value) : 0;
+  const previousPrice = sortedRecords.length > 1 ? Number(sortedRecords[sortedRecords.length - 2].price_value) : latestPrice;
+  const trendDelta = sortedRecords.length > 1 ? (latestPrice - previousPrice) / Math.max(sortedRecords.length - 1, 1) : 0;
+  const predictedPrice = latestPrice + trendDelta * 4;
+  const trend = predictedPrice > latestPrice ? 'up' : predictedPrice < latestPrice ? 'down' : 'steady';
+  const percentage = latestPrice ? Math.round(Math.abs(predictedPrice - latestPrice) / latestPrice * 100) : 0;
+
+  return {
+    commodity_name: getDisplayCommodityName(name),
+    current_price: latestPrice,
+    predicted_price: predictedPrice,
+    trend,
+    percentage,
+    recommendation: trend === 'up' ? 'Tunda pembelian' : trend === 'down' ? 'Beli sekarang' : 'Pantau harga',
+    sourceLabel: 'Trend lokal',
+    isAi: false,
+    series: buildDailySeries(latestPrice, predictedPrice),
+  };
+}
+
+function buildForecastSummaryCardMarkup(item) {
+  const trendColor = item.trend === 'down' ? 'var(--g2)' : item.trend === 'up' ? 'var(--red)' : 'var(--text3)';
+  const trendLabel = item.trend === 'down' ? 'Turun' : item.trend === 'up' ? 'Naik' : 'Stabil';
+  const trendBadge = item.trend === 'up' ? 'pill-wait' : item.trend === 'down' ? 'pill-buy' : 'pill-watch';
+  const changeText = item.percentage !== 0 ? `${item.trend === 'up' ? '+' : '-'}${item.percentage}%` : '0%';
+
+  return `
+    <div class="trend-area forecast-summary-card">
+      <div class="forecast-item-head">
+        <div>
+          <div class="forecast-item-title">${item.commodity_name}</div>
+          <div class="forecast-item-meta">${item.sourceLabel}</div>
+        </div>
+        <span class="pred-pill ${trendBadge}" style="white-space:nowrap;">${trendLabel} ${changeText}</span>
+      </div>
+      <div class="forecast-summary">
+        <div>
+          <div class="forecast-subtitle">Saat ini</div>
+          <div class="forecast-value">Rp ${formatRupiah(item.current_price)}</div>
+        </div>
+        <div>
+          <div class="forecast-subtitle">H+4</div>
+          <div class="forecast-value" style="color:${trendColor}">Rp ${formatRupiah(item.predicted_price)}</div>
+        </div>
+      </div>
+      <div class="forecast-footer">
+        <span>${item.recommendation}</span>
+        <span>Rp ${formatRupiah(item.current_price)} → Rp ${formatRupiah(item.predicted_price)}</span>
+      </div>
+    </div>
+  `;
+}
+
+function buildForecastChartCardMarkup(item) {
+  const trendColor = item.trend === 'down' ? 'var(--g2)' : item.trend === 'up' ? 'var(--red)' : 'var(--text3)';
+  const trendLabel = item.trend === 'down' ? 'Turun' : item.trend === 'up' ? 'Naik' : 'Stabil';
+  const trendBadge = item.trend === 'up' ? 'pill-wait' : item.trend === 'down' ? 'pill-buy' : 'pill-watch';
+  const changeText = item.percentage !== 0 ? `${item.trend === 'up' ? '+' : '-'}${item.percentage}%` : '0%';
+  const minPrice = Math.min(...item.series);
+  const maxPrice = Math.max(...item.series);
+
+  const bars = item.series.map((value) => {
+    const height = maxPrice === minPrice ? 50 : ((value - minPrice) / (maxPrice - minPrice)) * 80 + 10;
+    return `<div class="lc-bar" title="Rp ${formatRupiah(value)}" style="height:${height}%"></div>`;
+  }).join('');
+
+  const labels = ['Hari ini', 'D+1', 'D+2', 'D+3', 'D+4'].map(label => `<span class="lc-lbl">${label}</span>`).join('');
+
+  return `
+    <div class="trend-area forecast-chart-item">
+      <div class="forecast-item-head">
+        <div>
+          <div class="forecast-item-title">${item.commodity_name}</div>
+          <div class="forecast-item-meta">${item.sourceLabel}</div>
+        </div>
+        <span class="pred-pill ${trendBadge}" style="white-space:nowrap;">${trendLabel} ${changeText}</span>
+      </div>
+      <div class="line-chart" style="height:80px;margin-top:12px">${bars}</div>
+      <div class="lc-labels">${labels}</div>
+      <div class="forecast-footer">
+        <span style="color:${trendColor}">Rp ${formatRupiah(item.current_price)} → Rp ${formatRupiah(item.predicted_price)}</span>
+        <span>${item.recommendation}</span>
+      </div>
+    </div>
+  `;
+}
+
 /* ── 3. DIGITAL KITCHEN: Sinkronisasi Grid Card Sesuai CSS Figma ── */
 function loadPantryItems() {
   fetch('/api/pantry', {
@@ -553,163 +709,7 @@ async function deletePantryItem(itemId) {
   }
 }
 
-function formatRupiah(value) {
-  if (value === null || value === undefined || Number.isNaN(Number(value))) {
-    return '--';
-  }
-  return Number(value).toLocaleString('id-ID');
-}
-
-function getDisplayCommodityName(name) {
-  if (!name) return 'Komoditas';
-
-  const normalized = String(name).toLowerCase();
-  if (normalized.includes('cabai') || normalized.includes('chili')) return 'Cabai Merah';
-  if (normalized.includes('bawang') || normalized.includes('garlic')) return 'Bawang Putih';
-  if (normalized.includes('tomat') || normalized.includes('tomato')) return 'Tomat';
-  if (normalized.includes('beras') || normalized.includes('rice')) return 'Beras';
-  if (normalized.includes('telur') || normalized.includes('egg')) return 'Telur';
-  if (normalized.includes('daging') || normalized.includes('beef') || normalized.includes('meat')) return 'Daging Sapi';
-  if (normalized.includes('minyak') || normalized.includes('oil')) return 'Minyak Sayur';
-  if (normalized.includes('gula') || normalized.includes('sugar')) return 'Gula';
-  return String(name);
-}
-
-function getForecastAlias(name) {
-  if (!name) return null;
-
-  const normalized = String(name).toLowerCase();
-  if (normalized.includes('cabai') || normalized.includes('chili')) return 'Chili (Red)';
-  if (normalized.includes('beras') || normalized.includes('rice')) return 'Rice';
-  if (normalized.includes('telur') || normalized.includes('egg')) return 'Eggs';
-  if (normalized.includes('daging') || normalized.includes('beef') || normalized.includes('meat')) return 'Meat (Beef)';
-  if (normalized.includes('minyak') || normalized.includes('oil')) return 'Oil (Vegetable)';
-  if (normalized.includes('gula') || normalized.includes('sugar')) return 'Sugar';
-  return null;
-}
-
-function buildDailySeries(currentPrice, predictedPrice) {
-  const current = Number(currentPrice) || 0;
-  const target = Number(predictedPrice) || current;
-  const step = (target - current) / 4;
-
-  return Array.from({ length: 5 }, (_, index) => Math.max(0, current + step * index));
-}
-
-function sortHistory(records = []) {
-  return records
-    .slice()
-    .filter(record => Number.isFinite(Number(record.price_value)))
-    .sort((a, b) => new Date(a.recorded_date) - new Date(b.recorded_date));
-}
-
-function getSafeForecastValues(records = [], payload = {}) {
-  const sortedRecords = sortHistory(records);
-  const latestPrice = sortedRecords.length > 0 ? Number(sortedRecords[sortedRecords.length - 1].price_value) : 0;
-  const previousPrice = sortedRecords.length > 1 ? Number(sortedRecords[sortedRecords.length - 2].price_value) : latestPrice;
-  const currentPrice = Number(payload.current_price) > 0 ? Number(payload.current_price) : latestPrice;
-  const predictedPrice = Number(payload.predicted_price) > 0 ? Number(payload.predicted_price) : currentPrice;
-  const trendDelta = sortedRecords.length > 1 ? (latestPrice - previousPrice) / Math.max(sortedRecords.length - 1, 1) : 0;
-  const fallbackPredicted = latestPrice + trendDelta * 4;
-  const safePredicted = Number.isFinite(predictedPrice) && predictedPrice > 0 ? predictedPrice : fallbackPredicted;
-
-  return {
-    currentPrice,
-    predictedPrice: safePredicted,
-    trendDelta,
-  };
-}
-
-function buildFallbackForecast(name, records = []) {
-  const sortedRecords = sortHistory(records);
-  const latestPrice = sortedRecords.length > 0 ? Number(sortedRecords[sortedRecords.length - 1].price_value) : 0;
-  const previousPrice = sortedRecords.length > 1 ? Number(sortedRecords[sortedRecords.length - 2].price_value) : latestPrice;
-  const trendDelta = sortedRecords.length > 1 ? (latestPrice - previousPrice) / Math.max(sortedRecords.length - 1, 1) : 0;
-  const predictedPrice = latestPrice + trendDelta * 4;
-  const trend = predictedPrice > latestPrice ? 'up' : predictedPrice < latestPrice ? 'down' : 'steady';
-  const percentage = latestPrice ? Math.round(Math.abs(predictedPrice - latestPrice) / latestPrice * 100) : 0;
-
-  return {
-    commodity_name: getDisplayCommodityName(name),
-    current_price: latestPrice,
-    predicted_price: predictedPrice,
-    trend,
-    percentage,
-    recommendation: trend === 'up' ? 'Tunda pembelian' : trend === 'down' ? 'Beli sekarang' : 'Pantau harga',
-    sourceLabel: 'Trend lokal',
-    isAi: false,
-    series: buildDailySeries(latestPrice, predictedPrice),
-  };
-}
-
-function buildForecastSummaryCardMarkup(item) {
-  const trendColor = item.trend === 'down' ? 'var(--g2)' : item.trend === 'up' ? 'var(--red)' : 'var(--text3)';
-  const trendLabel = item.trend === 'down' ? 'Turun' : item.trend === 'up' ? 'Naik' : 'Stabil';
-  const trendBadge = item.trend === 'up' ? 'pill-wait' : item.trend === 'down' ? 'pill-buy' : 'pill-watch';
-  const changeText = item.percentage !== 0 ? `${item.trend === 'up' ? '+' : '-'}${item.percentage}%` : '0%';
-
-  return `
-    <div class="trend-area forecast-summary-card">
-      <div class="forecast-item-head">
-        <div>
-          <div class="forecast-item-title">${item.commodity_name}</div>
-          <div class="forecast-item-meta">${item.sourceLabel}</div>
-        </div>
-        <span class="pred-pill ${trendBadge}" style="white-space:nowrap;">${trendLabel} ${changeText}</span>
-      </div>
-      <div class="forecast-summary">
-        <div>
-          <div class="forecast-subtitle">Saat ini</div>
-          <div class="forecast-value">Rp ${formatRupiah(item.current_price)}</div>
-        </div>
-        <div>
-          <div class="forecast-subtitle">H+4</div>
-          <div class="forecast-value" style="color:${trendColor}">Rp ${formatRupiah(item.predicted_price)}</div>
-        </div>
-      </div>
-      <div class="forecast-footer">
-        <span>${item.recommendation}</span>
-        <span>Rp ${formatRupiah(item.current_price)} → Rp ${formatRupiah(item.predicted_price)}</span>
-      </div>
-    </div>
-  `;
-}
-
-function buildForecastChartCardMarkup(item) {
-  const trendColor = item.trend === 'down' ? 'var(--g2)' : item.trend === 'up' ? 'var(--red)' : 'var(--text3)';
-  const trendLabel = item.trend === 'down' ? 'Turun' : item.trend === 'up' ? 'Naik' : 'Stabil';
-  const trendBadge = item.trend === 'up' ? 'pill-wait' : item.trend === 'down' ? 'pill-buy' : 'pill-watch';
-  const changeText = item.percentage !== 0 ? `${item.trend === 'up' ? '+' : '-'}${item.percentage}%` : '0%';
-  const minPrice = Math.min(...item.series);
-  const maxPrice = Math.max(...item.series);
-
-  const bars = item.series.map((value) => {
-    const height = maxPrice === minPrice ? 50 : ((value - minPrice) / (maxPrice - minPrice)) * 80 + 10;
-    return `<div class="lc-bar" title="Rp ${formatRupiah(value)}" style="height:${height}%"></div>`;
-  }).join('');
-
-  const labels = ['Hari ini', 'D+1', 'D+2', 'D+3', 'D+4'].map(label => `<span class="lc-lbl">${label}</span>`).join('');
-
-  return `
-    <div class="trend-area forecast-chart-item">
-      <div class="forecast-item-head">
-        <div>
-          <div class="forecast-item-title">${item.commodity_name}</div>
-          <div class="forecast-item-meta">${item.sourceLabel}</div>
-        </div>
-        <span class="pred-pill ${trendBadge}" style="white-space:nowrap;">${trendLabel} ${changeText}</span>
-      </div>
-      <div class="line-chart" style="height:80px;margin-top:12px">${bars}</div>
-      <div class="lc-labels">${labels}</div>
-      <div class="forecast-footer">
-        <span style="color:${trendColor}">Rp ${formatRupiah(item.current_price)} → Rp ${formatRupiah(item.predicted_price)}</span>
-        <span>${item.recommendation}</span>
-      </div>
-    </div>
-  `;
-}
-
-async function loadPriceForecast() {
+function loadPriceForecast() {
   try {
     const response = await fetch('/api/commodity', {
       headers: {
