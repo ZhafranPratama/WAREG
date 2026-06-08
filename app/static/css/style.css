@@ -164,10 +164,14 @@ input, select, textarea { font-family: inherit; }
   flex-shrink: 0;
 }
 .sb-uname { font-size: 12px; font-weight: 600; color: #fff; }
-.sb-uloc  { font-size: 10px; color: rgba(255, 255, 255, 0.4); }
-#dashboard-location,
+.sb-uloc  { font-size: 10px; color: #000; }
+#dashboard-location {
+  color: #000;
+}
 #dashboard-market-recommendation,
-#account-profile-location,
+#account-profile-location {
+  color: #000;
+}
 #sidebar-user-location {
   color: #fff !important;
 }
@@ -756,6 +760,26 @@ tr:hover td { background: var(--bg); }
 }
 
 /* ── TREND CHART ── */
+
+#trends-list-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.trend-item{
+  background:#fff;
+  border:1px solid #e5e7eb;
+  border-radius:12px;
+  padding:16px;
+  transition:.2s;
+}
+
+.trend-item:hover{
+  transform:translateY(-2px);
+  box-shadow:0 4px 12px rgba(0,0,0,.08);
+}
+
 .trend-area {
   background: var(--card);
   border: 1px solid var(--bdr);
