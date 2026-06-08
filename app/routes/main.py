@@ -24,7 +24,12 @@ def register_page():
 @main_bp.route('/api/commodity', methods=['GET'])
 @token_required
 def get_commodity_prices(current_user):
-    prices = CommodityPrice.query.order_by(CommodityPrice.recorded_date.desc()).all()
+    prices = (
+    CommodityPrice.query
+    .filter(CommodityPrice.commodity_name != 'Garlic (Medium)')
+    .order_by(CommodityPrice.recorded_date.desc())
+    .all()
+    )   
     result = [
         {
             'price_id': item.price_id,

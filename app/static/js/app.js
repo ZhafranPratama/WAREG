@@ -16,33 +16,50 @@ document.addEventListener('DOMContentLoaded', () => {
     return;
   }
 
-  // Inisialisasi Fungsi Interaksi UI Bawaan Figma
+  // Inisialisasi UI
   initToggles();
   initAddKitchen();
   initNotifBell();
   animateBars();
   initChartHover();
   initSaveProfile();
+
   if (typeof populateLocationSelect === 'function') {
     populateLocationSelect('account-location');
   }
 
-  // Muat data user dari backend jika sudah login
+  // User
   if (getToken()) {
     loadCurrentUser();
   }
 
-  // Inisialisasi Sinkronisasi Data API Flask
+  // Load data awal
   loadDashboardStats();
   loadPriceTrends();
   loadPriceForecast();
-  loadMarketComparison();
   loadMarketRegions();
+  loadMarketComparison();
   handlePantryForm();
   handleImportExcel();
   loadPantryItems();
-  try { renderPriceHeadlines(); } catch(e){}
-  
+
+  try {
+    renderPriceHeadlines();
+  } catch (e) {}
+
+  // =========================
+  // Savings Map Events
+  // =========================
+
+  const regionSelect = document.getElementById('market-region-select');
+  const commoditySelect = document.getElementById('market-commodity-select');
+  const refreshBtn = document.getElementById('market-region-refresh');
+
+  regionSelect?.addEventListener('change', loadMarketComparison);
+
+  commoditySelect?.addEventListener('change', loadMarketComparison);
+
+  refreshBtn?.addEventListener('click', loadMarketComparison);
 });
 
 function getAuthHeaders() {
@@ -813,7 +830,6 @@ function getDisplayCommodityName(name) {
 
   const normalized = String(name).toLowerCase();
   if (normalized.includes('cabai') || normalized.includes('chili')) return 'Cabai Merah';
-  if (normalized.includes('bawang') || normalized.includes('garlic')) return 'Bawang Putih';
   if (normalized.includes('tomat') || normalized.includes('tomato')) return 'Tomat';
   if (normalized.includes('beras') || normalized.includes('rice')) return 'Beras';
   if (normalized.includes('telur') || normalized.includes('egg')) return 'Telur';
@@ -989,7 +1005,6 @@ function getProductEmoji(name) {
   if (!name) return '📦';
   const normalized = String(name).toLowerCase();
   if (normalized.includes('cabai') || normalized.includes('chili')) return '🌶️';
-  if (normalized.includes('bawang') || normalized.includes('garlic')) return '🧄';
   if (normalized.includes('tomat') || normalized.includes('tomato')) return '🍅';
   if (normalized.includes('beras') || normalized.includes('rice')) return '🌾';
   if (normalized.includes('telur') || normalized.includes('egg')) return '🥚';
@@ -1496,42 +1511,134 @@ function applyUserLocationRegionSelection() {
 }
 
 function loadMarketComparison() {
-  const sel = document.getElementById('market-region-select');
-  const regionId = sel && sel.value ? sel.value : currentUserRegionId || '1';
-  fetch(`/api/predictor/compare?commodity=Chili%20(Red)&region_id=${encodeURIComponent(regionId)}`)
-    .then(res => res.ok ? res.json() : Promise.reject('Tidak dapat mengambil rekomendasi pasar'))
+  const regionSelect =
+    document.getElementById('market-region-select');
+
+  const commoditySelect =
+    document.getElementById('market-commodity-select');
+
+  const marketBody =
+    document.getElementById('market-compare-body');
+
+  const regionId =
+    regionSelect?.value ||
+    currentUserRegionId ||
+    '1';
+
+  const commodity =
+    commoditySelect?.value ||
+    'Chili (Red)';
+
+  if (marketBody) {
+    marketBody.innerHTML = `
+      <p style="padding:16px;color:var(--text3);margin:0">
+        Memuat rekomendasi pasar...
+      </p>
+    `;
+  }
+
+  fetch(
+    `/api/predictor/compare?commodity=${encodeURIComponent(
+      commodity
+    )}&region_id=${encodeURIComponent(regionId)}`
+  )
+    .then(res =>
+      res.ok
+        ? res.json()
+        : Promise.reject(
+            'Tidak dapat mengambil rekomendasi pasar'
+          )
+    )
     .then(result => {
       const data = result.data || {};
-      const marketBody = document.getElementById('market-compare-body');
-      if (!marketBody) return;
 
-      const items = data.recommendations || [];
-      if (items.length === 0) {
-        marketBody.innerHTML = '<p style="padding:16px;color:var(--text3);margin:0">Rekomendasi pasar tidak tersedia saat ini.</p>';
+      const items =
+        data.recommendations || [];
+
+      if (!items.length) {
+        marketBody.innerHTML = `
+          <p style="padding:16px;color:var(--text3);margin:0">
+            Tidak ada rekomendasi pasar untuk komoditas ini.
+          </p>
+        `;
         return;
       }
 
-      let html = '<div style="display:grid;gap:12px">';
-      items.slice(0, 4).forEach(item => {
-        const price = item.predicted_price ? Number(item.predicted_price).toLocaleString('id-ID') : '--';
+      let html =
+        '<div style="display:grid;gap:12px">';
+
+      items.slice(0, 5).forEach((item, index) => {
+        const price =
+          item.predicted_price
+            ? Number(
+                item.predicted_price
+              ).toLocaleString('id-ID')
+            : '--';
+
+        const medal =
+          index === 0
+            ? '🥇'
+            : index === 1
+            ? '🥈'
+            : index === 2
+            ? '🥉'
+            : '🏪';
+
         html += `
-          <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px;background:rgba(255,255,255,0.04);border-radius:14px">
+          <div
+            style="
+              display:flex;
+              justify-content:space-between;
+              align-items:center;
+              gap:12px;
+              padding:12px;
+              background:rgba(255,255,255,0.04);
+              border-radius:14px;
+            "
+          >
             <div>
-              <div style="font-size:14px;font-weight:700;color:var(--text)">${item.market}</div>
+              <div style="font-size:14px;font-weight:700;color:var(--text)">
+                ${medal} ${item.market}
+              </div>
             </div>
-            <div style="font-size:14px;font-weight:700;color:var(--g2)">Rp ${price}</div>
-          </div>`;
+
+            <div style="font-size:14px;font-weight:700;color:var(--g2)">
+              Rp ${price}
+            </div>
+          </div>
+        `;
       });
+
       html += '</div>';
-      html += `<div style="margin-top:14px;font-size:13px;color:var(--text3)">${data.recommendation || 'Rekomendasi dihitung oleh model AI.'}</div>`;
+
+      html += `
+        <div
+          style="
+            margin-top:14px;
+            font-size:13px;
+            color:var(--text3)
+          "
+        >
+          ${
+            data.recommendation ||
+            'Rekomendasi dihitung oleh model AI.'
+          }
+        </div>
+      `;
+
       marketBody.innerHTML = html;
     })
     .catch(err => {
-      console.error('Gagal memuat rekomendasi pasar:', err);
-      const marketBody = document.getElementById('market-compare-body');
-      if (marketBody) {
-        marketBody.innerHTML = '<p style="padding:16px;color:var(--text3);margin:0">Rekomendasi pasar tidak tersedia.</p>';
-      }
+      console.error(
+        'Gagal memuat rekomendasi pasar:',
+        err
+      );
+
+      marketBody.innerHTML = `
+        <p style="padding:16px;color:var(--text3);margin:0">
+          Rekomendasi pasar tidak tersedia.
+        </p>
+      `;
     });
 }
 

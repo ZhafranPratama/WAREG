@@ -31,7 +31,6 @@ class PriceAnalyticsEngine:
             'Chili (Red)': 'wareg_lstm_Chili_Red.h5',
             'Oil (Vegetable)': 'wareg_lstm_Oil_Vegetable.h5',
             'Sugar': 'wareg_lstm_Sugar.h5',
-            'Garlic (Medium)': None,
         }
         self.default_commodity = 'Rice'
         self.lookback = 12
@@ -58,9 +57,6 @@ class PriceAnalyticsEngine:
             'minyak': 'Oil (Vegetable)',
             'sugar': 'Sugar',
             'gula': 'Sugar',
-            'garlic (medium)': 'Garlic (Medium)',
-            'garlic': 'Garlic (Medium)',
-            'bawang': 'Garlic (Medium)',
         }
 
         if normalized in alias_map:

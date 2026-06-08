@@ -11,7 +11,6 @@ SUPPORTED_COMMODITIES = {
     'Oil (Vegetable)',
     'Rice',
     'Sugar',
-    'Garlic (Medium)',
 }
 
 
