@@ -1150,7 +1150,7 @@ function loadPantryItems() {
       }
 
       data.forEach(item => {
-        const statusClass = item.status === 'expired' ? 'tag-red' : item.status === 'expires-today' ? 'tag-red' : item.status === 'soon' ? 'tag-amber' : item.status === 'warning' ? 'tag-amber' : 'tag-green';
+        const statusClass = item.status === 'expired' || item.status === 'expires-today' || item.status === 'soon' ? 'tag-red' : item.status === 'warning' ? 'tag-amber' : 'tag-green';
         const statusLabel = item.status_text || 'Status tidak tersedia';
         const itemHTML = `
           <div class="pantry-card pantry-card-clickable" data-item-id="${item.item_id}">
@@ -1937,8 +1937,8 @@ function updateStockTable(items) {
     }
 
     // status badge
-    const statusClass = item.status === 'expired' || item.status === 'expires-today' ? 'tag-red' : item.status === 'soon' || item.status === 'warning' ? 'tag-amber' : 'tag-green';
-    const statusText = item.status_text || (item.status === 'expired' ? 'Kritis' : 'Aman');
+    const statusClass = item.status === 'expired' || item.status === 'expires-today' || item.status === 'soon' ? 'tag-red' : item.status === 'warning' ? 'tag-amber' : 'tag-green';
+    const statusText = item.status === 'expired' || item.status === 'expires-today' || item.status === 'soon' ? 'Kritis' : item.status === 'warning' ? 'Perhatian' : 'Aman';
 
     const barWidth = pct != null ? `${pct}%` : '0%';
     const pctLabel = pct != null ? `${pct}%` : '';
@@ -1949,7 +1949,7 @@ function updateStockTable(items) {
         <td>${escapeHtml(qty)}</td>
         <td>${item.purchase_price != null ? ('Rp ' + Number(item.purchase_price).toLocaleString('id-ID')) : '-'}</td>
         <td style="${expiryLabel.includes('Hari ini') ? 'color:var(--red);font-weight:700' : ''}">${escapeHtml(expiryLabel)}</td>
-        <td><span class="tag ${statusClass}">${escapeHtml(statusText)}</span></td>
+        <td><span class="tag ${statusClass}">${statusText}</span></td>
       </tr>
     `;
   }).join('');

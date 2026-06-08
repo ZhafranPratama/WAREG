@@ -169,7 +169,7 @@ input, select, textarea { font-family: inherit; }
 #dashboard-market-recommendation,
 #account-profile-location,
 #sidebar-user-location {
-  color: #000 !important;
+  color: #fff !important;
 }
 
 /* ── MAIN ── */
