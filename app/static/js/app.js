@@ -104,12 +104,22 @@ function findRegionIdByLocationName(locationName, regions = []) {
 }
 
 function nav(pageId, btn) {
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.sb-item').forEach(b => b.classList.remove('active'));
-  
+  document.querySelectorAll('.page')
+    .forEach(p => p.classList.remove('active'));
+
+  document.querySelectorAll('.sb-item')
+    .forEach(b => b.classList.remove('active'));
+
   const target = document.getElementById('page-' + pageId);
   if (target) target.classList.add('active');
-  if (btn) btn.classList.add('active');
+
+  const sidebarBtn = document.querySelector(
+    `.sb-item[onclick*="nav('${pageId}'"]`
+  );
+
+  if (sidebarBtn) {
+    sidebarBtn.classList.add('active');
+  }
 }
 
 function formatInitials(name) {
