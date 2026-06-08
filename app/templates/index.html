@@ -136,251 +136,44 @@
 
       <!-- ──────────────── DASHBOARD ──────────────── -->
       <div class="page active" id="page-dashboard">
-        <div class="pg-head">
-          <div class="pg-title">Dashboard</div>
-          <div class="pg-sub">Selamat datang kembali, <span id="greeting-user-name">Ibu Budi</span></div>
-        </div>
-
-        <div class="toast green">
-          <svg viewBox="0 0 15 15" fill="none">
-            <circle cx="7.5" cy="7.5" r="6" stroke="currentColor" stroke-width="1.4"/>
-            <path d="M5 7.5l2 2 3-3" stroke="currentColor" stroke-width="1.4"
-              stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-          <div>
-            <div class="toast-title">Kabar baik! 🌶️ Harga cabai diprediksi turun 21% dalam 2 hari.</div>
-            Pertimbangkan untuk menunda pembelian.
+        
+        <!-- HERO GREETING SECTION -->
+        <div class="hero-greeting">
+          <div class="hero-content">
+            <h1 class="hero-title">Halo, siap belanja lebih hemat hari ini?</h1>
+            <p class="hero-subtitle">Kelola belanja kamu, cek prediksi harga, dan temukan pasar terdekat.</p>
+          </div>
+          <div class="hero-meta" style="margin-top:16px;display:flex;gap:12px;flex-wrap:wrap;align-items:center;color:var(--text3);font-size:14px;">
+            <span style="background:rgba(255,255,255,0.05);padding:10px 14px;border-radius:14px;">📍 Lokasi harga: <strong id="dashboard-location">Jakarta Selatan</strong></span>
           </div>
         </div>
 
-        <div class="toast amber">
-          <svg viewBox="0 0 15 15" fill="none">
-            <path d="M7.5 2L1 13h13L7.5 2z" stroke="currentColor" stroke-width="1.3"/>
-            <path d="M7.5 6v4M7.5 11.5v.5" stroke="currentColor" stroke-width="1.4"
-              stroke-linecap="round"/>
-          </svg>
-          <div>
-            <div class="toast-title">🧈 Mentega kadaluarsa hari ini!</div>
-            Gunakan segera agar tidak terbuang.
+        <!-- HEADLINE HARGA TABS & FILTER -->
+        <div class="headline-section">
+          <div class="headline-header">
+            <h2 class="headline-title">🔥 HEADLINE HARGA HARI INI - AI PRICE PREDICTOR</h2>
+            <div class="headline-tabs">
+              <button class="tab-btn active" onclick="filterHeadlines('increasing')">
+                <span>Ada naik & turun</span>
+                <span class="tab-count"></span>
+              </button>
+              <button class="tab-btn" onclick="filterHeadlines('stable')">
+                <span>Semua stabil</span>
+                <span class="tab-count"></span>
+              </button>
+            </div>
           </div>
-        </div>
 
-        <!-- Stats — dash-harga-beras & dash-total-pantry diisi oleh loadDashboardStats() -->
-        <div class="stats">
-          <div class="stat">
-            <div class="stat-top">
-              <div>
-                <div class="stat-label">Harga Beras Terkini</div>
-                <!-- ✦ DINAMIS: diisi oleh loadDashboardStats() via API /api/commodity -->
-                <div class="stat-val" id="dash-harga-beras">
-                  <span style="color:var(--text3);font-size:13px">Memuat...</span>
-                </div>
-                <div class="stat-change neu">harga pasar hari ini</div>
-              </div>
-              <div class="stat-icon" style="background:var(--g4)">
-                <svg viewBox="0 0 16 16" fill="none" style="color:var(--g2)">
-                  <path d="M8 2l1.5 4H14l-3.5 2.5 1.3 4L8 10.5l-3.8 2 1.3-4L2 6h4.5L8 2z"
-                    fill="currentColor"/>
-                </svg>
-              </div>
-            </div>
-          </div>
-          <div class="stat">
-            <div class="stat-top">
-              <div>
-                <div class="stat-label">Total Komoditas</div>
-                <!-- ✦ DINAMIS: diisi oleh loadDashboardStats() via API /api/commodity -->
-                <div class="stat-val" id="dash-total-pantry">
-                  <span style="color:var(--text3);font-size:13px">Memuat...</span>
-                </div>
-                <div class="stat-change neu">data tercatat</div>
-              </div>
-              <div class="stat-icon" style="background:var(--blu-p)">
-                <svg viewBox="0 0 16 16" fill="none" style="color:var(--blu)">
-                  <circle cx="8" cy="8" r="5.5" stroke="currentColor" stroke-width="1.4"/>
-                  <path d="M5.5 8l2 2 3-3" stroke="currentColor" stroke-width="1.5"
-                    stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-              </div>
-            </div>
-          </div>
-          <div class="stat">
-            <div class="stat-top">
-              <div>
-                <div class="stat-label">Perlu Perhatian</div>
-                <div class="stat-val">3</div>
-                <div class="stat-change dn">2 segera kadaluarsa</div>
-              </div>
-              <div class="stat-icon" style="background:var(--amb-p)">
-                <svg viewBox="0 0 16 16" fill="none" style="color:var(--amb)">
-                  <path d="M8 2l6 11H2L8 2z" stroke="currentColor" stroke-width="1.3"/>
-                  <path d="M8 7v3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-                  <circle cx="8" cy="11.5" r="0.7" fill="currentColor"/>
-                </svg>
-              </div>
-            </div>
-          </div>
-          <div class="stat">
-            <div class="stat-top">
-              <div>
-                <div class="stat-label">Grup Beli Bareng</div>
-                <div class="stat-val">3</div>
-                <div class="stat-change up">1 siap checkout</div>
-              </div>
-              <div class="stat-icon" style="background:var(--g4)">
-                <svg viewBox="0 0 16 16" fill="none" style="color:var(--g2)">
-                  <circle cx="5" cy="6" r="2" stroke="currentColor" stroke-width="1.3"/>
-                  <circle cx="11" cy="6" r="2" stroke="currentColor" stroke-width="1.3"/>
-                  <path d="M1 14c0-2.2 1.8-4 4-4s4 1.8 4 4" stroke="currentColor" stroke-width="1.3" fill="none"/>
-                  <path d="M10 10c.3-.1.6-.1 1-.1 2.2 0 4 1.8 4 4" stroke="currentColor" stroke-width="1.3" fill="none"/>
-                </svg>
-              </div>
+          <!-- PRODUCT CARDS GRID -->
+          <div class="headline-grid" id="headline-products-grid">
+            <!-- Populated by JavaScript -->
+            <div style="grid-column: 1/-1; padding: 20px; text-align: center; color: #6B7280;">
+              Memuat data produk...
             </div>
           </div>
         </div>
 
-        <!-- Main 2-col grid -->
-        <div class="grid2">
-          <!-- Left column -->
-          <div class="col">
-            <!-- AI Price Predictor card -->
-            <div class="card">
-              <div class="card-head">
-                <span class="card-title">
-                  <svg viewBox="0 0 14 14" fill="none">
-                    <polyline points="1,11 4.5,5.5 8,8 13,2" stroke="currentColor"
-                      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                  </svg>
-                  AI Price Predictor
-                </span>
-                <span class="tag tag-green">AI Aktif</span>
-              </div>
-            </div>
 
-            <!-- Radius Hemat / Map card -->
-            <div class="card">
-              <div class="card-head">
-                <span class="card-title">
-                  <svg viewBox="0 0 14 14" fill="none">
-                    <circle cx="7" cy="6" r="2.5" stroke="currentColor" stroke-width="1.3"/>
-                    <path d="M7 12S3 9.2 3 6a4 4 0 0 1 8 0c0 3.2-4 6-4 6z"
-                      stroke="currentColor" stroke-width="1.3" fill="none"/>
-                  </svg>
-                  Radius Hemat
-                </span>
-                <span class="tag tag-blue">3 Pasar</span>
-              </div>
-              <div class="card-body">
-                <div class="map-box">
-                  <div class="map-road" style="height:1px;top:50%;left:0;right:0"></div>
-                  <div class="map-road" style="width:1px;left:35%;top:0;bottom:0"></div>
-                  <div class="map-pin" style="left:22%;top:22%">
-                    <div class="pin-circle" style="background:var(--g2)"></div>
-                    <div class="pin-lbl">Pasar Minggu</div>
-                  </div>
-                  <div class="map-pin" style="left:55%;top:30%">
-                    <div class="pin-circle" style="background:var(--amb)"></div>
-                    <div class="pin-lbl">Pasar Santa</div>
-                  </div>
-                  <div class="map-pin" style="left:65%;top:55%">
-                    <div class="pin-circle" style="background:var(--red)"></div>
-                    <div class="pin-lbl">Pasar Mayestik</div>
-                  </div>
-                  <div class="you-dot" style="left:36%;top:44%"></div>
-                  <div class="map-legend">
-                    <div class="ml"><div class="ml-dot" style="background:var(--g2)"></div>Termurah</div>
-                    <div class="ml"><div class="ml-dot" style="background:var(--amb)"></div>Sedang</div>
-                    <div class="ml"><div class="ml-dot" style="background:var(--red)"></div>Mahal</div>
-                  </div>
-                </div>
-                <div class="market-row">
-                  <div class="mkt-rank" style="background:var(--g4);color:var(--g2)">1</div>
-                  <div class="mkt-info">
-                    <div class="mkt-name">Pasar Minggu</div>
-                    <div class="mkt-detail">0.8 km · Cabai Rp 65.000 · Bawang Rp 38.000</div>
-                  </div>
-                  <span class="tag tag-green">Termurah</span>
-                </div>
-                <div class="market-row">
-                  <div class="mkt-rank" style="background:var(--amb-p);color:var(--amb)">2</div>
-                  <div class="mkt-info">
-                    <div class="mkt-name">Pasar Santa</div>
-                    <div class="mkt-detail">1.2 km · Cabai Rp 75.000 · Bawang Rp 42.000</div>
-                  </div>
-                  <span class="tag tag-amber">Sedang</span>
-                </div>
-                <div class="market-row" style="margin-bottom:0">
-                  <div class="mkt-rank" style="background:var(--red-p);color:var(--red)">3</div>
-                  <div class="mkt-info">
-                    <div class="mkt-name">Pasar Mayestik</div>
-                    <div class="mkt-detail">2.1 km · Cabai Rp 85.000 · Bawang Rp 45.000</div>
-                  </div>
-                  <span class="tag tag-red">Mahal</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Right column -->
-          <div class="col">
-            <!-- Dapur Digital mini -->
-            <div class="card">
-              <div class="card-head">
-                <span class="card-title">🍳 Dapur Digital</span>
-                <button class="btn btn-g btn-sm add-kitchen-btn">+ Tambah</button>
-              </div>
-              <div class="card-body">
-                <div class="stock-item">
-                  <div class="s-emoji">🌾</div>
-                  <div class="s-info"><div class="s-name">Beras</div><div class="s-qty">5 kg</div></div>
-                  <div class="s-bar-wrap">
-                    <div class="s-bar"><div class="s-fill" style="width:65%;background:var(--g3)"></div></div>
-                    <div class="s-pct" style="color:var(--g2)">65%</div>
-                  </div>
-                  <div class="s-days" style="background:var(--g4);color:var(--g2)">120 hari</div>
-                </div>
-                <div class="stock-item">
-                  <div class="s-emoji">🥚</div>
-                  <div class="s-info"><div class="s-name">Telur</div><div class="s-qty">10 butir</div></div>
-                  <div class="s-bar-wrap">
-                    <div class="s-bar"><div class="s-fill" style="width:35%;background:#F59E0B"></div></div>
-                    <div class="s-pct" style="color:var(--amb)">35%</div>
-                  </div>
-                  <div class="s-days" style="background:var(--amb-p);color:var(--amb)">5 hari</div>
-                </div>
-                <div class="stock-item" style="border-color:#FECACA">
-                  <div class="s-emoji">🧈</div>
-                  <div class="s-info"><div class="s-name">Mentega</div><div class="s-qty">200 g</div></div>
-                  <div class="s-bar-wrap">
-                    <div class="s-bar"><div class="s-fill" style="width:15%;background:var(--red)"></div></div>
-                    <div class="s-pct" style="color:var(--red)">15%</div>
-                  </div>
-                  <div class="s-days" style="background:var(--red-p);color:var(--red)">Hari ini!</div>
-                </div>
-                <div class="stock-item">
-                  <div class="s-emoji">🥛</div>
-                  <div class="s-info"><div class="s-name">Susu</div><div class="s-qty">1 L</div></div>
-                  <div class="s-bar-wrap">
-                    <div class="s-bar"><div class="s-fill" style="width:70%;background:var(--g3)"></div></div>
-                    <div class="s-pct" style="color:var(--g2)">70%</div>
-                  </div>
-                  <div class="s-days" style="background:var(--g4);color:var(--g2)">7 hari</div>
-                </div>
-                <div class="stock-item" style="margin-bottom:0">
-                  <div class="s-emoji">🍞</div>
-                  <div class="s-info"><div class="s-name">Roti Tawar</div><div class="s-qty">1 pak</div></div>
-                  <div class="s-bar-wrap">
-                    <div class="s-bar"><div class="s-fill" style="width:25%;background:#F59E0B"></div></div>
-                    <div class="s-pct" style="color:var(--amb)">25%</div>
-                  </div>
-                  <div class="s-days" style="background:var(--amb-p);color:var(--amb)">2 hari</div>
-                </div>
-              </div>
-            </div>
-
-            
-          </div>
-        </div>
       </div><!-- /page-dashboard -->
 
 

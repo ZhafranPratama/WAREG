@@ -41,6 +41,7 @@ document.addEventListener('DOMContentLoaded', () => {
   handlePantryForm();
   handleImportExcel();
   loadPantryItems();
+  try { renderPriceHeadlines(); } catch(e){}
   
 });
 
@@ -50,6 +51,57 @@ function getAuthHeaders() {
 }
 
 let priceTrendCache = [];
+let priceForecastCache = [];
+let priceTrendsLoaded = false;
+let priceForecastLoaded = false;
+let priceHeadlinesError = false;
+let currentUserRegionId = 1;
+let currentUserLocationName = 'Jakarta Selatan';
+let marketRegionsList = [];
+
+function updateUserLocationWidgets() {
+  const dashboardLocationEl = document.getElementById('dashboard-location');
+  const dashboardRecommendationEl = document.getElementById('dashboard-market-recommendation');
+  const sideLocationEl = document.getElementById('sidebar-user-location');
+  const accountProfileLocation = document.getElementById('account-profile-location');
+
+  if (dashboardLocationEl) {
+    dashboardLocationEl.textContent = currentUserLocationName || 'Jakarta Selatan';
+  }
+  if (sideLocationEl) {
+    sideLocationEl.textContent = currentUserLocationName || 'Jakarta Selatan';
+  }
+  if (accountProfileLocation) {
+    accountProfileLocation.textContent = `📍 ${currentUserLocationName || 'Jakarta Selatan'}`;
+  }
+
+  if (dashboardRecommendationEl) {
+    dashboardRecommendationEl.textContent = currentUserLocationName ? `Untuk ${currentUserLocationName}` : 'Memuat...';
+  }
+}
+
+function findRegionIdByLocationName(locationName, regions = []) {
+  if (!locationName || !regions.length) return null;
+  const normalized = locationName.trim().toLowerCase();
+
+  const exact = regions.find(r => r.name.trim().toLowerCase() === normalized);
+  if (exact) return exact.id;
+
+  const partial = regions.find(r => {
+    const regionName = r.name.trim().toLowerCase();
+    return normalized.includes(regionName) || regionName.includes(normalized);
+  });
+  if (partial) return partial.id;
+
+  const locationTokens = normalized.split(/\s+/).filter(Boolean);
+  for (const region of regions) {
+    const regionTokens = region.name.trim().toLowerCase().split(/\s+/).filter(Boolean);
+    if (locationTokens.some(token => regionTokens.includes(token))) {
+      return region.id;
+    }
+  }
+  return null;
+}
 
 function nav(pageId, btn) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
@@ -68,7 +120,7 @@ function formatInitials(name) {
 }
 
 function loadCurrentUser() {
-  fetch('/api/auth/me', {
+  return fetch('/api/auth/me', {
       headers: {
         'Content-Type': 'application/json',
         ...getAuthHeaders(),
@@ -104,20 +156,29 @@ function loadCurrentUser() {
       if (accountProfileLocation) accountProfileLocation.textContent = `📍 ${user.location_name || 'Jakarta Selatan'}`;
       if (accountNameInput) accountNameInput.value = user.full_name;
       if (accountEmailInput) accountEmailInput.value = user.email;
+
+      currentUserLocationName = user.location_name || 'Jakarta Selatan';
+      currentUserRegionId = Number(user.location_id) || 1;
+      updateUserLocationWidgets();
+
       if (accountLocationInput) {
         if (typeof populateLocationSelect === 'function') {
-          populateLocationSelect('account-location', user.location_name || 'Jakarta Selatan');
+          populateLocationSelect('account-location', currentUserLocationName);
         } else {
-          accountLocationInput.value = user.location_name || 'Jakarta Selatan';
+          accountLocationInput.value = currentUserLocationName;
         }
       } else if (accountLocationSelect) {
         if (typeof populateLocationSelect === 'function') {
-          populateLocationSelect('account-location', user.location_name || 'Jakarta Selatan');
+          populateLocationSelect('account-location', currentUserLocationName);
         } else {
-          accountLocationSelect.value = user.location_name || 'Jakarta Selatan';
+          accountLocationSelect.value = currentUserLocationName;
         }
       }
       if (accountPersonaSelect) accountPersonaSelect.value = user.persona || 'other';
+
+      loadDashboardStats(currentUserRegionId);
+      loadAccountMarketRecommendation();
+      applyUserLocationRegionSelection();
     })
     .catch(() => {
       localStorage.removeItem('wareg_token');
@@ -165,13 +226,15 @@ async function saveProfile() {
     return false;
   }
 
-  loadCurrentUser();
+  await loadCurrentUser();
+  loadAccountMarketRecommendation();
   return true;
 }
 
 /* ── 1. DASHBOARD: Memuat Angka Ringkasan Statistik ──────────────── */
-function loadDashboardStats() {
-  fetch('/api/commodity', {
+function loadDashboardStats(regionId = currentUserRegionId) {
+  const regionQuery = regionId ? `?region_id=${encodeURIComponent(regionId)}` : '';
+  fetch(`/api/commodity${regionQuery}`, {
       headers: {
         'Content-Type': 'application/json',
         ...getAuthHeaders(),
@@ -365,6 +428,12 @@ function loadPriceTrends() {
 
       priceTrendCache = commodityRows;
 
+      // mark loaded for headline rendering
+      priceTrendsLoaded = true;
+      priceHeadlinesError = false;
+      try { renderPriceHeadlines(); } catch(e){}
+      try { renderHeadlineProducts(); } catch(e){}
+
       commodityRows.forEach(item => {
         const trendColor = item.trend === 'up' ? 'var(--red)' : item.trend === 'down' ? 'var(--g2)' : 'var(--text3)';
         const trendBadge = item.trend === 'up' ? 'pill-wait' : item.trend === 'down' ? 'pill-buy' : 'pill-watch';
@@ -395,7 +464,331 @@ function loadPriceTrends() {
 
       renderTrendCharts(selectEl?.value || commodityRows[0]?.commodity_name);
     })
-    .catch(err => console.error("Gagal memuat visualisasi tren harga:", err));
+    .catch(err => {
+      console.error("Gagal memuat visualisasi tren harga:", err);
+      priceTrendsLoaded = true; // mark as finished to avoid perpetual loading
+      priceHeadlinesError = true;
+      try { renderPriceHeadlines(); } catch(e){}
+    });
+}
+
+function renderPriceHeadlines() {
+
+  const container = document.getElementById('price-headline-body');
+  const summaryEl = document.getElementById('price-headline-summary');
+  const skeletonEl = document.getElementById('price-headline-skeleton');
+
+  if (!container || !summaryEl) return;
+
+  const THRESHOLD = 1;
+
+  // =========================
+  // LOADING
+  // =========================
+
+  if (!priceTrendsLoaded || !priceForecastLoaded) {
+
+    if (skeletonEl) {
+      skeletonEl.style.display = 'block';
+    }
+
+    summaryEl.textContent = 'Memuat data...';
+
+    container.innerHTML = `
+      <div class="headline-skeleton">
+        <div style="
+          height:64px;
+          border-radius:14px;
+          background:#E5E7EB;
+          animation:pulse 1.4s infinite;
+        "></div>
+      </div>
+    `;
+
+    return;
+  }
+
+  if (skeletonEl) {
+    skeletonEl.style.display = 'none';
+  }
+
+  // =========================
+  // ERROR
+  // =========================
+
+  if (priceHeadlinesError) {
+
+    summaryEl.textContent = 'Gagal memuat data';
+
+    container.innerHTML = `
+      <div style="
+        display:flex;
+        align-items:center;
+        gap:8px;
+        color:#92400E;
+        font-size:13px;
+      ">
+        <i class="ti ti-alert-circle"></i>
+        <span>
+          Gagal memuat data harga. Coba refresh halaman.
+        </span>
+      </div>
+    `;
+
+    return;
+  }
+
+  const trends =
+    Array.isArray(priceTrendCache)
+      ? priceTrendCache
+      : [];
+
+  const forecasts =
+    Array.isArray(priceForecastCache)
+      ? priceForecastCache
+      : [];
+
+  // =========================
+  // SUMMARY COUNTS
+  // =========================
+
+  let naik = 0;
+  let turun = 0;
+  let stabil = 0;
+
+  trends.forEach(item => {
+
+    const pct =
+      Number(item.percentage) || 0;
+
+    if (pct >= THRESHOLD) {
+      naik++;
+    }
+    else if (pct <= -THRESHOLD) {
+      turun++;
+    }
+    else {
+      stabil++;
+    }
+
+  });
+
+  if (
+    naik === 0 &&
+    turun === 0 &&
+    stabil > 0
+  ) {
+    summaryEl.textContent =
+      'Semua stabil hari ini';
+  }
+  else if (!trends.length) {
+    summaryEl.textContent =
+      'Memuat data...';
+  }
+  else {
+    summaryEl.textContent =
+      `${naik} naik · ${turun} turun · ${stabil} stabil`;
+  }
+
+  // =========================
+  // BANNER RULES
+  // =========================
+
+  const hasTunda =
+    forecasts.some(item =>
+      item.trend === 'up' &&
+      Math.abs(Number(item.percentage || 0))
+        >= THRESHOLD
+    );
+
+  const hasBeli =
+    trends.some(item =>
+      item.trend === 'down' &&
+      Math.abs(Number(item.percentage || 0))
+        >= THRESHOLD
+    );
+
+  const allForecastStable =
+    forecasts.length > 0 &&
+    forecasts.every(item =>
+      Math.abs(
+        Number(item.percentage || 0)
+      ) < THRESHOLD
+    );
+
+  const allTrendStable =
+    trends.length > 0 &&
+    trends.every(item =>
+      Math.abs(
+        Number(item.percentage || 0)
+      ) < THRESHOLD
+    );
+
+  const allStable =
+    allForecastStable &&
+    allTrendStable;
+
+  // =========================
+  // FULLY STABLE
+  // =========================
+
+  if (allStable) {
+
+    container.innerHTML = `
+      <div
+        style="
+          display:flex;
+          align-items:center;
+          gap:16px;
+          background:#F8F9FA;
+          border:0.5px solid #E5E7EB;
+          border-radius:14px;
+          padding:16px;
+        "
+      >
+
+        <div
+          style="
+            display:flex;
+            align-items:center;
+            gap:8px;
+          "
+        >
+          <i
+            class="ti ti-shield-check"
+            style="
+              font-size:24px;
+              color:#16A34A;
+            "
+          ></i>
+
+          <span
+            style="
+              background:#D1FAE5;
+              color:#065F46;
+              border-radius:999px;
+              padding:4px 10px;
+              font-size:11px;
+              font-weight:600;
+            "
+          >
+            STABIL
+          </span>
+        </div>
+
+        <div style="flex:1">
+
+          <div
+            style="
+              font-size:14px;
+              font-weight:600;
+            "
+          >
+            Semua harga stabil hari ini —
+            tidak ada yang perlu ditunda
+            atau diburu
+          </div>
+
+          <div
+            style="
+              margin-top:8px;
+              display:flex;
+              gap:8px;
+              flex-wrap:wrap;
+            "
+          >
+
+            <span
+              style="
+                font-size:11px;
+                color:#6B7280;
+              "
+            >
+              <i class="ti ti-clock"></i>
+              Dipantau sejak pagi ini
+            </span>
+
+            <span
+              style="
+                font-size:11px;
+                color:#6B7280;
+              "
+            >
+              <i class="ti ti-refresh"></i>
+              Data diperbarui otomatis
+            </span>
+
+          </div>
+
+        </div>
+
+      </div>
+    `;
+
+    return;
+  }
+
+  // =========================
+  // TUNDA + BELI
+  // =========================
+
+  const banners = [];
+
+  if (hasTunda) {
+
+    banners.push(`
+      <div class="headline-card headline-wait">
+
+        <div class="hc-left">
+          <i class="ti ti-clock-pause"></i>
+        </div>
+
+        <div class="hc-body">
+          <div class="hc-title">
+            TUNDA
+          </div>
+
+          <div class="hc-sub">
+            Setidaknya satu komoditas
+            diprediksi naik dalam waktu dekat.
+          </div>
+        </div>
+
+      </div>
+    `);
+
+  }
+
+  if (hasBeli) {
+
+    banners.push(`
+      <div class="headline-card headline-buy">
+
+        <div class="hc-left">
+          <i class="ti ti-shopping-cart-check"></i>
+        </div>
+
+        <div class="hc-body">
+          <div class="hc-title">
+            BELI
+          </div>
+
+          <div class="hc-sub">
+            Ada komoditas yang sedang turun
+            atau berada di area harga rendah.
+          </div>
+        </div>
+
+      </div>
+    `);
+
+  }
+
+  container.innerHTML = `
+    <div class="headline-row">
+      ${banners.join('')}
+    </div>
+  `;
 }
 
 function formatRupiah(value) {
@@ -463,6 +856,150 @@ function getSafeForecastValues(records = [], payload = {}) {
     predictedPrice: safePredicted,
     trendDelta,
   };
+}
+
+/* ═══════════════════════════════════════════════════════
+   HEADLINE PRODUCTS GRID RENDERING
+   ═══════════════════════════════════════════════════════ */
+
+let currentHeadlineFilter = 'increasing';
+
+function renderHeadlineProducts() {
+  const grid = document.getElementById('headline-products-grid');
+  if (!grid) return;
+
+  if (!priceTrendsLoaded || !priceForecastLoaded) {
+    grid.innerHTML = `
+      <div style="grid-column: 1/-1; padding: 40px 20px; text-align: center; color: #6B7280;">
+        <div style="font-size: 14px; font-weight: 600;">Memuat produk...</div>
+      </div>
+    `;
+    return;
+  }
+
+  // Combine trend and forecast data
+  const products = [];
+  const THRESHOLD = 1;
+
+  if (Array.isArray(priceForecastCache)) {
+    priceForecastCache.forEach(forecast => {
+      // Use commodity_name from API response (not name)
+      const commodityName = forecast.commodity_name || forecast.name || 'Komoditas';
+      const pct = Number(forecast.percentage || 0);
+      let trend = 'stable';
+      
+      if (pct >= THRESHOLD) {
+        trend = 'up';
+      } else if (pct <= -THRESHOLD) {
+        trend = 'down';
+      }
+
+      products.push({
+        name: commodityName,
+        emoji: getProductEmoji(commodityName),
+        currentPrice: Number(forecast.current_price || 0),
+        predictedPrice: Number(forecast.predicted_price || forecast.current_price || 0),
+        percentage: pct,
+        unit: forecast.unit || '/kg',
+        trend: trend,
+        predictedDays: '2-3',  // Default if not available
+        type: pct >= THRESHOLD ? 'wait' : (pct <= -THRESHOLD ? 'buy' : 'watch')
+      });
+    });
+  }
+
+  // Update tab counts
+  const upDown = products.filter(p => p.trend !== 'stable').length;
+  const stable = products.filter(p => p.trend === 'stable').length;
+  
+  const tabs = document.querySelectorAll('.tab-count');
+  if (tabs.length >= 1) tabs[0].textContent = upDown;
+  if (tabs.length >= 2) tabs[1].textContent = stable;
+
+  // Filter based on current filter
+  let filtered = products;
+  if (currentHeadlineFilter === 'increasing') {
+    filtered = products.filter(p => p.trend !== 'stable');
+  } else if (currentHeadlineFilter === 'stable') {
+    filtered = products.filter(p => p.trend === 'stable');
+  }
+
+  // Render products
+  if (filtered.length === 0) {
+    grid.innerHTML = `
+      <div style="grid-column: 1/-1; padding: 40px 20px; text-align: center; color: #6B7280;">
+        <div style="font-size: 14px; font-weight: 600;">Tidak ada data untuk filter ini</div>
+      </div>
+    `;
+    return;
+  }
+
+  grid.innerHTML = filtered.map(product => `
+    <div class="headline-product-card">
+      <div class="hpc-left">
+        <div class="hpc-badge">${product.emoji}</div>
+      </div>
+      
+
+      <div class="hpc-body">
+        <div class="hpc-top">
+          <div>
+            <div class="hpc-name">${product.name}</div>
+            <div class="hpc-subtitle">
+              Harga ${product.currentPrice < product.predictedPrice ? 'diprediksi naik' : (product.currentPrice > product.predictedPrice ? 'sedang turun' : 'stabil')}
+            </div>
+          </div>
+        </div>
+
+        <div class="hpc-prices">
+          <div class="hpc-price-item">
+            <div class="hpc-price-label">Saat ini</div>
+            <div class="hpc-price-value">Rp${formatRupiah(product.currentPrice)}</div>
+          </div>
+          <div class="hpc-price-item">
+            <div class="hpc-price-label">Prediksi</div>
+            <div class="hpc-price-value">Rp${formatRupiah(product.predictedPrice)}</div>
+          </div>
+        </div>
+
+        <div class="hpc-bottom">
+          <div class="hpc-prediction ${product.type}">
+            ${product.currentPrice < product.predictedPrice ? '↑' : '↓'} ${Math.abs(product.percentage).toFixed(1)}%
+          </div>
+          <div style="font-size: 11px; color: #6B7280;">
+            dalam ${product.predictedDays} hari
+          </div>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function getProductEmoji(name) {
+  if (!name) return '📦';
+  const normalized = String(name).toLowerCase();
+  if (normalized.includes('cabai') || normalized.includes('chili')) return '🌶️';
+  if (normalized.includes('bawang') || normalized.includes('garlic')) return '🧄';
+  if (normalized.includes('tomat') || normalized.includes('tomato')) return '🍅';
+  if (normalized.includes('beras') || normalized.includes('rice')) return '🌾';
+  if (normalized.includes('telur') || normalized.includes('egg')) return '🥚';
+  if (normalized.includes('daging') || normalized.includes('beef') || normalized.includes('meat')) return '🥩';
+  if (normalized.includes('minyak') || normalized.includes('oil')) return '🧈';
+  if (normalized.includes('gula') || normalized.includes('sugar')) return '🍯';
+  return '📦';
+}
+
+function filterHeadlines(type) {
+  currentHeadlineFilter = type;
+  
+  // Update tab buttons
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.classList.remove('active');
+  });
+  event.target.closest('.tab-btn').classList.add('active');
+  
+  // Re-render products
+  renderHeadlineProducts();
 }
 
 function buildFallbackForecast(name, records = []) {
@@ -870,6 +1407,13 @@ async function loadPriceForecast() {
       .map(buildForecastChartCardMarkup)
       .join('');
 
+    // Cache forecasts for headline rendering
+    priceForecastCache = sortedForecasts;
+    priceForecastLoaded = true;
+    priceHeadlinesError = false;
+    try { renderPriceHeadlines(); } catch(e){}
+    try { renderHeadlineProducts(); } catch(e){}
+
     forecastBody.innerHTML = `<div class="forecast-grid">${summaryCards}</div>`;
     const chartBody = document.getElementById('predictor-chart-body');
     if (chartBody) {
@@ -885,12 +1429,65 @@ async function loadPriceForecast() {
     if (chartBody) {
       chartBody.innerHTML = '<p style="padding:16px;color:var(--text3);margin:0">Grafik prediksi tidak tersedia saat ini.</p>';
     }
+    priceForecastLoaded = true;
+    priceHeadlinesError = true;
+    try { renderPriceHeadlines(); } catch(e){}
+    try { renderHeadlineProducts(); } catch(e){}
+  }
+}
+
+function loadAccountMarketRecommendation() {
+  const accountMarketBody = document.getElementById('account-market-recommendation');
+  if (!accountMarketBody) return;
+
+  const regionId = currentUserRegionId || 1;
+  accountMarketBody.innerHTML = '<p style="padding:16px;color:var(--text3);margin:0">Memuat rekomendasi pasar untuk lokasi akun...</p>';
+
+  fetch(`/api/predictor/compare?commodity=Chili%20(Red)&region_id=${encodeURIComponent(regionId)}`)
+    .then(res => res.ok ? res.json() : Promise.reject('Tidak dapat mengambil rekomendasi pasar'))
+    .then(result => {
+      const data = result.data || {};
+      const items = data.recommendations || [];
+      if (!items.length) {
+        accountMarketBody.innerHTML = '<p style="padding:16px;color:var(--text3);margin:0">Rekomendasi pasar tidak tersedia untuk lokasi akun.</p>';
+        return;
+      }
+
+      let html = '<div style="display:grid;gap:12px">';
+      items.slice(0, 4).forEach(item => {
+        const price = item.predicted_price ? Number(item.predicted_price).toLocaleString('id-ID') : '--';
+        html += `
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px;background:rgba(255,255,255,0.04);border-radius:14px">
+            <div>
+              <div style="font-size:14px;font-weight:700;color:var(--text)">${item.market}</div>
+              <div style="font-size:12px;color:var(--text3);">Jarak ~${item.distance || '-'} km</div>
+            </div>
+            <div style="font-size:14px;font-weight:700;color:var(--g2)">Rp ${price}</div>
+          </div>`;
+      });
+      html += '</div>';
+      html += `<div style="margin-top:14px;font-size:13px;color:var(--text3)">${data.recommendation || 'Rekomendasi dihitung oleh model AI.'}</div>`;
+      accountMarketBody.innerHTML = html;
+    })
+    .catch(err => {
+      console.error('Gagal memuat rekomendasi pasar akun:', err);
+      accountMarketBody.innerHTML = '<p style="padding:16px;color:var(--text3);margin:0">Rekomendasi pasar tidak tersedia.</p>';
+    });
+}
+
+function applyUserLocationRegionSelection() {
+  const sel = document.getElementById('market-region-select');
+  if (!sel || !marketRegionsList.length) return;
+  const preferredId = findRegionIdByLocationName(currentUserLocationName, marketRegionsList) || currentUserRegionId || marketRegionsList[0]?.id || 1;
+  if (preferredId) {
+    sel.value = preferredId;
+    loadMarketComparison();
   }
 }
 
 function loadMarketComparison() {
   const sel = document.getElementById('market-region-select');
-  const regionId = sel ? sel.value : '1';
+  const regionId = sel && sel.value ? sel.value : currentUserRegionId || '1';
   fetch(`/api/predictor/compare?commodity=Chili%20(Red)&region_id=${encodeURIComponent(regionId)}`)
     .then(res => res.ok ? res.json() : Promise.reject('Tidak dapat mengambil rekomendasi pasar'))
     .then(result => {
@@ -936,11 +1533,13 @@ function loadMarketRegions() {
       const sel = document.getElementById('market-region-select');
       if (!sel) return;
 
-      // preserve previously selected value when refreshing options
+      marketRegionsList = regions;
       const prev = sel.value;
       sel.innerHTML = regions.map(r => `<option value="${r.id}">${r.name}</option>`).join('');
-      if (prev) {
-        // try to restore previous selection; if not present, keep default first
+      const preferredId = findRegionIdByLocationName(currentUserLocationName, regions) || currentUserRegionId || regions[0]?.id || 1;
+      if (preferredId) {
+        sel.value = preferredId;
+      } else if (prev) {
         const found = Array.from(sel.options).some(opt => opt.value === prev);
         if (found) sel.value = prev;
       }
@@ -949,7 +1548,6 @@ function loadMarketRegions() {
       const btn = document.getElementById('market-region-refresh');
       if (btn) btn.onclick = () => loadMarketRegions();
 
-      // trigger load for current selection (preserved or first)
       loadMarketComparison();
     })
     .catch(err => {
